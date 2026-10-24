@@ -102,6 +102,9 @@ h3 { font-size: 15px; margin-bottom: 7px; }
 .button.ghost { background: transparent; color: var(--blue); padding-left: 0; padding-right: 0; }
 .button.danger { background: var(--rose); color: var(--rose-ink); }
 .button.green { background: #d8f8e9; color: var(--mint-ink); }
+a.button { display: inline-block; }
+.call-confirm { display: grid; gap: 8px; }
+.call-confirm strong { font-size: 14px; }
 .notice { margin-top: 12px; padding: 11px 12px; border-radius: 12px; background: var(--amber); color: var(--amber-ink); font-size: 12px; line-height: 1.5; }
 .success { background: var(--mint); color: var(--mint-ink); }
 .muted { color: var(--muted); font-size: 12px; line-height: 1.55; }
@@ -121,6 +124,16 @@ h3 { font-size: 15px; margin-bottom: 7px; }
 .swap { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #eaf1ff; color: var(--blue); }
 .rate-result { margin-top: 15px; padding: 16px; border-radius: 14px; background: #f3f7fb; }
 .rate-result strong { font-size: 22px; letter-spacing: -0.04em; }
+.source-line { margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.button:disabled { opacity: .55; cursor: not-allowed; }
+.inline-select { width: auto; min-width: 150px; padding: 8px 10px; font-size: 13px; }
+.place-item.candidate { align-items: flex-start; }
+.place-item.candidate.unselected { opacity: .6; }
+.check-input { width: 22px; height: 22px; margin-top: 9px; flex: none; }
+.day-select { width: auto; flex: none; padding: 8px; font-size: 12px; }
+.candidate-name { flex: 1; min-width: 0; }
+.candidate-name .input { padding: 8px 10px; font-size: 13px; }
+.candidate-name span { color: var(--amber-ink); }
 .phrase-list { display: flex; gap: 8px; flex-wrap: wrap; }
 .phrase { border: 1px solid var(--line); border-radius: 99px; padding: 8px 10px; background: white; font-size: 12px; }
 .phrase:hover { border-color: var(--blue); color: var(--blue); }

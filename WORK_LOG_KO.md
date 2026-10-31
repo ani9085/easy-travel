@@ -121,3 +121,17 @@
 - Vercel 배포와 실제 AI 키 설정, DB/알림 연결은 아직 완료된 것으로 보지 않습니다.
 
 Claude의 첫 작업은 CLAUDE_HANDOFF_KO.md의 우선순위 1순위부터 읽고, 실제 항공 공급자 API를 선택하기 전에 데이터 계약과 데모/실데이터 표시 경계를 확정하는 것입니다.
+
+## 9. 전면 감사와 P0 안정화 (2026-10-31, Claude Opus)
+
+- 작업 방식: `main`을 건드리지 않고 브랜치 `claude/p0-hardening`(git worktree `C:/Users/dream/Downloads/easy-travel-p0`)에서 진행. push·배포는 하지 않음.
+- 검수 계약 `docs/EASY_TRAVEL_OPUS_MVP_REVIEW_SPEC_KO.md`를 기준으로 감사 문서 6종을 `docs/`에 작성.
+- 발견한 주요 문제: 공개 `/api/ai`(인증·제한·타임아웃 없음), Next 14 지원 종료와 critical 취약점, 데이터 3곳 분산, 목적지와 무관한 프랑스어·에어프랑스, UTC 빌드 하이드레이션 불일치, 하드코딩된 첫 화면 값, 죽은 가족 링크.
+- 커밋 단위:
+  1. Next 16 / React 19, lockfile, ESLint, 보안 헤더
+  2. 단일 Trip·목적지 프로필·저장소 이전·날짜 검증·목적지 시간대 기준 오늘
+  3. `/api/ai` 보호(출처·접속 코드·횟수 제한·타임아웃·프롬프트 분리)
+  4. 화면 정리(T01·T02, 하이드레이션, 데모 문구, 번역 칸 분리)
+  5. 문서
+- 검증: `npm run typecheck`·`npm run lint`·`npm test`(38개 통과)·`npm run build` 통과. 로컬 프로덕션 서버(TZ=UTC)에서 API 401/403/400/429, 보안 헤더, 하이드레이션·CSP 콘솔 오류 없음, T01·T02 흐름, 375px·900px 가로 스크롤 없음 확인. 실기기·OpenRouter 실제 호출·Vercel 미리보기는 미실행([TEST_PLAN](./docs/TEST_PLAN_KO.md) §5).
+- 남은 결정: main 병합·push 승인, Vercel 환경변수(`EASY_TRAVEL_ACCESS_CODE`, `OPENROUTER_SITE_URL`), OpenRouter 키 사용 한도, [외부 API 질문 5개](./docs/EXTERNAL_API_DECISIONS_KO.md).

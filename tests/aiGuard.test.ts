@@ -28,6 +28,14 @@ describe("AI 요청 검증 (T15)", () => {
     }
   });
 
+  it("번역 방향 기본값은 한→현지어, 언어는 목록에 있는 것만", () => {
+    const basic = validateAiRequest({ task: "translate", text: "안녕하세요" });
+    assert.ok(basic.ok && basic.value.task === "translate" && basic.value.direction === "to_local" && basic.value.language === null);
+    const reverse = validateAiRequest({ task: "translate", text: "トイレはどこ", direction: "to_korean", language: "ja" });
+    assert.ok(reverse.ok && reverse.value.task === "translate" && reverse.value.direction === "to_korean" && reverse.value.language === "ja");
+    assert.equal(validateAiRequest({ task: "translate", text: "hi", language: "klingon" }).ok, false);
+  });
+
   it("사진은 JPEG·PNG·WEBP data URL만 받는다", () => {
     assert.equal(validateAiRequest({ task: "photo_location", image: "data:image/jpeg;base64,AAAA" }).ok, true);
     assert.equal(validateAiRequest({ task: "photo_location", image: "data:image/svg+xml;base64,AAAA" }).ok, false);

@@ -148,3 +148,18 @@ easy-travel을 이어서 작업해줘.
 6) 변경 후 npm run build를 실행하고, 390px/900px 화면에서 가로 스크롤과 부모님용 가독성을 확인해.
 7) 작업 결과와 남은 제한을 한국어 문서에 갱신하고, 커밋/push 전에는 supervisor(Codex)에게 최종 검토를 요청해.
 ~~~
+
+## 9. Codex 최신 반영 상태 (2026-10-31)
+
+현재 `main`의 최신 커밋은 `e4396dc feat: replace planning mocks with real workflow`입니다.
+
+- 초기 여행은 빈 초안입니다. 기존 레거시 도쿄·에펠탑 목업은 저장소 로딩 시 제거합니다.
+- 보호자와 부모님 모두 여행 계획을 입력할 수 있습니다.
+- 보호자 화면은 해시 앵커 스크롤이 아니라 메뉴별 독립 화면으로 렌더링합니다.
+- 항공 결과는 Duffel API가 설정된 경우에만 표시하며, 토큰이 없을 때 가짜 항공권을 보여주지 않습니다.
+- 가격 감시는 목표가와 하루 2회 시각을 저장하지만, 실제 백그라운드 실행은 네이티브 APK의 WorkManager 구현이 남아 있습니다.
+- 항공권 예약 상태가 된 뒤 OpenRouter로 일정·숙소 초안을 생성하고, 사용자가 수정·확정해야 일정에 반영합니다.
+- `npm run check`와 `npm run build`가 통과했습니다. 현재 개발 환경에는 Android SDK/ADB/Gradle이 없어 APK 자체는 아직 빌드하지 않았습니다.
+- GitHub push는 완료했습니다. Vercel 공개 URL은 Vercel 로그인 화면으로 보호되어 있으므로 Deployment Protection 설정을 확인해야 합니다.
+
+다음 작업자는 먼저 `docs/NATIVE_APK_PLAN_KO.md`를 읽고 Android Studio/SDK 설치 후 Capacitor Android 프로젝트와 WorkManager 브리지를 추가하세요. API 키는 계속 서버 환경변수에만 두고, 실제 항공·AI 결과가 없을 때 목업으로 대체하지 마세요.

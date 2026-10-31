@@ -8,12 +8,18 @@ easy-travel은 부모님과 보호자가 여행을 함께 준비하고, 부모�
 
 현재 저장소에는 **여행 중 보조 MVP + 여행 전 계획 UI 데모**가 있습니다. 계획 화면은 동작하지만 항공권 실시간 검색, 예약, 가족 서버 공유, 푸시 알림은 아직 연결되지 않았습니다.
 
+> **2026-10-31 갱신 (Claude Opus, 브랜치 `claude/p0-hardening`, main 병합 전)**
+> 전면 감사와 P0 안정화를 마쳤습니다. 이제 기준 문서는 `docs/`입니다. [AUDIT](./docs/AUDIT_KO.md) · [ARCHITECTURE](./docs/ARCHITECTURE_KO.md) · [PRODUCT_REQUIREMENTS](./docs/PRODUCT_REQUIREMENTS_KO.md) · [ROADMAP](./docs/ROADMAP_KO.md) · [TEST_PLAN](./docs/TEST_PLAN_KO.md) · [EXTERNAL_API_DECISIONS](./docs/EXTERNAL_API_DECISIONS_KO.md)
+> - 앱은 Next.js 16.4.3 / React 19.3.1입니다. 계획·여행·리뷰 데이터는 `lib/trip.ts`의 Trip 하나로 합쳤고, `localStorage` 키는 `easy-travel:trip`입니다.
+> - `/api/ai`에는 같은 출처 확인, `EASY_TRAVEL_ACCESS_CODE`(선택), 횟수 제한, 타임아웃이 들어갔습니다. `itinerary_import` 작업은 제거했습니다.
+> - 이 아래 §1–§6의 버전·파일·우선순위 설명은 이전 기록입니다. 다음 작업은 [ROADMAP](./docs/ROADMAP_KO.md)의 P1(PR-05~)부터 이어 갑니다.
+
 ## 1. 저장소와 실행
 
 - GitHub: <https://github.com/ani9085/easy-travel>
-- 로컬 경로: C:/Users/dream/OneDrive/문서/easy-travel
+- 로컬 경로: C:/Users/dream/OneDrive/문서/easy-travel (P0 작업 트리: C:/Users/dream/Downloads/easy-travel-p0, git worktree)
 - 기본 브랜치: main
-- 앱: Next.js 14.2.35 / React 18.3.1 / TypeScript 5.7.2
+- 앱: Next.js 14.2.35 / React 18.3.1 / TypeScript 5.7.2 (P0 브랜치: Next.js 16.4.3 / React 19.3.1)
 - 개발 실행:
 
 ~~~powershell

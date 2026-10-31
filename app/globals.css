@@ -349,3 +349,6 @@ a.button { display: inline-flex; align-items: center; justify-content: center; }
   .flight-card-top { display: grid; }
   .flight-status { justify-self: start; }
 }
+
+/* P0: 날짜 오류처럼 진행을 막는 안내는 경고색으로 구분합니다. */
+.notice.danger-notice { background: var(--rose); color: var(--rose-ink); font-weight: 700; }

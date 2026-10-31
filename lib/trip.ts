@@ -31,6 +31,8 @@ export type TripProfile = {
   preference: TravelPreference;
   hotel: string;
   emergencyNumber: string;
+  /** 알림 문구에 쓸 여행자 호칭(예: 엄마). 비우면 “부모님” */
+  travelerName: string;
 };
 
 export type ItineraryItem = {
@@ -39,6 +41,8 @@ export type ItineraryItem = {
   name: string;
   note: string;
   status: ItineraryStatus;
+  /** 상태를 마지막으로 바꾼 시각(사용자가 직접 누른 기록) */
+  statusAt: string | null;
   source: DataSource;
 };
 
@@ -55,6 +59,24 @@ export type FlightOffer = {
   /** 1인 왕복, KRW */
   totalPrice: number;
   currency: "KRW";
+  arrivalAirport?: string;
+  departLocal?: string;
+  arriveLocal?: string;
+  durationMinutes?: number;
+  baggageIncluded?: boolean;
+  /** 수하물 별도 운임의 1인 왕복 추가 요금(KRW) */
+  baggageFeeKrw?: number;
+};
+
+/** 여행 중 사용자가 직접 남긴 기록. 위치는 사용자가 고른 경우에만 들어갑니다. */
+export type JournalEventType = "checkin" | "hotel_arrival";
+export type JournalEvent = {
+  id: string;
+  type: JournalEventType;
+  at: string;
+  location: { lat: number; lng: number; accuracy: number } | null;
+  /** 가족에게 알리기 화면을 열었는지. 실제로 보냈는지는 앱이 알 수 없습니다. */
+  shareOpened: boolean;
 };
 
 export type PriceWatch = { mode: "off" | "demo"; updatedAt: string | null };
@@ -67,20 +89,26 @@ export type Trip = {
   itinerary: ItineraryItem[];
   flightOffers: FlightOffer[];
   priceWatch: PriceWatch;
-  journal: { lastCheckinAt: string | null };
+  journal: { lastCheckinAt: string | null; events: JournalEvent[] };
   createdAt: string;
   updatedAt: string;
 };
 
-export const DEMO_DESTINATION = "파리, 프랑스";
-export const DEMO_HOTEL = "Hôtel Mercure Paris Centre Tour Eiffel";
+// 1차 테스트 지역은 일본(도쿄)입니다. 데모 숙소는 길찾기가 되도록 실제 역 이름을 씁니다.
+export const DEMO_DESTINATION = "도쿄, 일본";
+export const DEMO_HOTEL = "신주쿠역";
 export const DEMO_FETCHED_AT = "2026-10-24T09:30:00+09:00";
 
+// 이동 시간은 지도 API 없이 지어내지 않습니다(요청서 PL-05).
 export const DEMO_ITINERARY: ItineraryItem[] = [
-  { id: "demo-1", day: 1, name: "에펠탑", note: "오후 3시 · 호텔에서 지하철 이동", status: "planned", source: "demo" },
-  { id: "demo-2", day: 2, name: "루브르 박물관", note: "오전 10시 · 예약 확인 필요", status: "planned", source: "demo" },
-  { id: "demo-3", day: 3, name: "몽마르트르", note: "오전 11시 · 걷는 양 보통", status: "planned", source: "demo" }
+  { id: "demo-1", day: 1, name: "신주쿠 교엔", note: "오후 · 첫날은 숙소 근처에서 가볍게 산책", status: "planned", statusAt: null, source: "demo" },
+  { id: "demo-2", day: 2, name: "센소지", note: "오전 · 사람이 적은 이른 시간 추천", status: "planned", statusAt: null, source: "demo" },
+  { id: "demo-3", day: 3, name: "도쿄역 마루노우치", note: "오후 · 실내 위주라 비 오는 날 대체 가능", status: "planned", statusAt: null, source: "demo" },
+  { id: "demo-4", day: 4, name: "우에노 공원", note: "오전 · 벤치가 많아 쉬어 가기 좋음", status: "planned", statusAt: null, source: "demo" }
 ];
+
+/** 예전(파리 데모) 저장소를 옮길 때 데모 장소를 알아보는 이름 */
+export const LEGACY_DEMO_NAMES = ["에펠탑", "루브르 박물관", "몽마르트르"];
 
 export const DEFAULT_PROFILE: TripProfile = {
   destination: DEMO_DESTINATION,
@@ -92,7 +120,8 @@ export const DEFAULT_PROFILE: TripProfile = {
   budget: "균형형",
   preference: "느긋한 일정",
   hotel: DEMO_HOTEL,
-  emergencyNumber: ""
+  emergencyNumber: "",
+  travelerName: ""
 };
 
 export function createDefaultTrip(now: string = DEMO_FETCHED_AT): Trip {
@@ -104,7 +133,7 @@ export function createDefaultTrip(now: string = DEMO_FETCHED_AT): Trip {
     itinerary: DEMO_ITINERARY.map((item) => ({ ...item })),
     flightOffers: buildDemoFlightOffers(DEFAULT_PROFILE, DEMO_FETCHED_AT),
     priceWatch: { mode: "off", updatedAt: null },
-    journal: { lastCheckinAt: null },
+    journal: { lastCheckinAt: null, events: [] },
     createdAt: now,
     updatedAt: now
   };
@@ -258,32 +287,39 @@ export function buildDemoFlightOffers(profile: TripProfile, fetchedAt: string): 
   const originLabel = profile.departure.trim() || "출발 지역";
   const destinationLabel = profile.destination.trim() || "여행지";
   const place = profileForDestination(destinationLabel);
-  const shapes: Array<{ stops: number; factor: number }> = [
-    { stops: 0, factor: 1.04 },
-    { stops: 1, factor: 0.92 },
-    { stops: 0, factor: 1.16 }
-  ];
-  return shapes.map((shape, index) => ({
+  return place.demoFlights.map((flight, index) => ({
     id: `demo-${place.id}-${index}`,
     provider: "demo",
     dataMode: "mock",
     fetchedAt,
     originLabel,
     destinationLabel,
-    airlineNames: [place.demoAirlines[index]],
-    stops: shape.stops,
-    totalPrice: Math.round((place.flightPerPersonKrw * shape.factor) / 1_000) * 1_000,
-    currency: "KRW"
+    airlineNames: [flight.airline],
+    stops: flight.stops,
+    totalPrice: Math.round((place.flightPerPersonKrw * flight.priceFactor) / 1_000) * 1_000,
+    currency: "KRW",
+    arrivalAirport: flight.arrivalAirport,
+    departLocal: flight.departLocal,
+    arriveLocal: flight.arriveLocal,
+    durationMinutes: flight.durationMinutes,
+    baggageIncluded: flight.baggageIncluded,
+    baggageFeeKrw: flight.baggageFeeKrw
   }));
+}
+
+/** 수하물 별도 요금까지 더한 1인 왕복 실지불 예상액 */
+export function effectiveFlightPrice(offer: FlightOffer) {
+  return offer.totalPrice + (offer.baggageIncluded === false ? offer.baggageFeeKrw ?? 0 : 0);
 }
 
 export type OfferBadge = { label: string; tone: "good" | "steady" | "watch" };
 
-/** 표시용 배지는 고정 문구가 아니라 실제 후보 가격으로 계산합니다. */
+/** 표시용 배지는 고정 문구가 아니라 수하물까지 더한 실제 후보 가격으로 계산합니다. */
 export function offerBadge(offer: FlightOffer, offers: FlightOffer[]): OfferBadge {
-  const cheapest = Math.min(...offers.map((item) => item.totalPrice));
-  if (offer.totalPrice === cheapest) return { label: "이 후보 중 가장 낮음", tone: "good" };
-  if (offer.stops === 0) return offer.totalPrice > cheapest * 1.15 ? { label: "직항 · 조금 높음", tone: "watch" } : { label: "직항", tone: "steady" };
+  const cheapest = Math.min(...offers.map(effectiveFlightPrice));
+  const price = effectiveFlightPrice(offer);
+  if (price === cheapest) return { label: "이 후보 중 가장 낮음", tone: "good" };
+  if (offer.stops === 0) return price > cheapest * 1.15 ? { label: "직항 · 조금 높음", tone: "watch" } : { label: "직항", tone: "steady" };
   return { label: `${offer.stops}회 경유`, tone: "steady" };
 }
 
@@ -293,4 +329,30 @@ export function offersAreStale(offers: FlightOffer[], profile: TripProfile) {
   const origin = profile.departure.trim() || "출발 지역";
   const destination = profile.destination.trim() || "여행지";
   return offers.some((offer) => offer.originLabel !== origin || offer.destinationLabel !== destination);
+}
+
+// --- 여행 중 기록 ---------------------------------------------------------------
+
+/** 부모님이 누른 일정 상태를 기록합니다. 자동으로 판단하지 않습니다. */
+export function setItineraryStatus(trip: Trip, id: string, status: ItineraryStatus, now: string): Trip {
+  return { ...trip, itinerary: trip.itinerary.map((item) => (item.id === id ? { ...item, status, statusAt: now } : item)), updatedAt: now };
+}
+
+export const MAX_JOURNAL_EVENTS = 200;
+
+export function addJournalEvent(trip: Trip, event: JournalEvent): Trip {
+  const events = [...trip.journal.events, event].slice(-MAX_JOURNAL_EVENTS);
+  const lastCheckinAt = event.type === "checkin" ? event.at : trip.journal.lastCheckinAt;
+  return { ...trip, journal: { lastCheckinAt, events }, updatedAt: event.at };
+}
+
+export function markJournalShared(trip: Trip, id: string): Trip {
+  return { ...trip, journal: { ...trip.journal, events: trip.journal.events.map((event) => (event.id === id ? { ...event, shareOpened: true } : event)) } };
+}
+
+export function lastJournalEvent(trip: Trip, type: JournalEventType) {
+  for (let index = trip.journal.events.length - 1; index >= 0; index -= 1) {
+    if (trip.journal.events[index].type === type) return trip.journal.events[index];
+  }
+  return null;
 }

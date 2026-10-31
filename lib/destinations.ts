@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
 // 목적지 프로필 — 문장·통화·언어·시간대·데모 항공사·비용 계수를 한 곳에서 정합니다.
-// 화면(page.tsx)과 서버(api/ai)가 같은 프로필을 씁니다.
+// 화면과 서버(api/ai)가 같은 프로필을 씁니다. 1차 테스트 지역은 일본입니다.
 // 비용 계수와 항공사는 데모용 가정이며 실제 시세가 아닙니다.
 // 긴급번호는 일부러 넣지 않습니다. 가족이 직접 확인해 입력합니다(README 참고).
 // ---------------------------------------------------------------------------
@@ -8,6 +8,23 @@
 export type DestinationId = "france" | "japan" | "thailand" | "vietnam" | "other";
 
 export type Phrase = { ko: string; local: string };
+
+/**
+ * 데모 항공 후보의 모양. 시각·소요·수하물은 예시 값이며 실제 운항 정보가 아닙니다.
+ * 시각이 없는 목적지는 가격·경유만 비교합니다.
+ */
+export type DemoFlight = {
+  airline: string;
+  stops: number;
+  priceFactor: number;
+  arrivalAirport?: string;
+  departLocal?: string;
+  arriveLocal?: string;
+  durationMinutes?: number;
+  baggageIncluded?: boolean;
+  /** 수하물이 포함되지 않은 운임의 1인 왕복 추가 요금 예시(KRW) */
+  baggageFeeKrw?: number;
+};
 
 export type DestinationProfile = {
   id: DestinationId;
@@ -24,7 +41,7 @@ export type DestinationProfile = {
   /** "오늘"을 계산할 IANA 시간대. 알 수 없으면 null(기기 시간 사용) */
   timeZone: string | null;
   phrases: Phrase[];
-  demoAirlines: [string, string, string];
+  demoFlights: DemoFlight[];
   flightPerPersonKrw: number;
   dailyPerPersonKrw: number;
 };
@@ -45,7 +62,11 @@ const PROFILES: DestinationProfile[] = [
       { ko: "천천히 말해 주세요.", local: "Parlez lentement, s'il vous plaît." },
       { ko: "도와주세요.", local: "Aidez-moi, s'il vous plaît." }
     ],
-    demoAirlines: ["대한항공", "아시아나항공", "에어프랑스"],
+    demoFlights: [
+      { airline: "대한항공", stops: 0, priceFactor: 1.04 },
+      { airline: "아시아나항공", stops: 1, priceFactor: 0.92 },
+      { airline: "에어프랑스", stops: 0, priceFactor: 1.16 }
+    ],
     flightPerPersonKrw: 1_200_000,
     dailyPerPersonKrw: 180_000
   },
@@ -62,9 +83,17 @@ const PROFILES: DestinationProfile[] = [
       { ko: "화장실이 어디예요?", local: "お手洗いはどこですか？" },
       { ko: "이 주소로 가 주세요.", local: "この住所までお願いします。" },
       { ko: "천천히 말해 주세요.", local: "ゆっくり話してください。" },
-      { ko: "도와주세요.", local: "助けてください。" }
+      { ko: "도와주세요.", local: "助けてください。" },
+      { ko: "이거 얼마예요?", local: "これはいくらですか？" },
+      { ko: "카드로 계산할 수 있어요?", local: "カードで払えますか？" },
+      { ko: "역은 어느 쪽이에요?", local: "駅はどちらですか？" },
+      { ko: "엘리베이터가 어디예요?", local: "エレベーターはどこですか？" }
     ],
-    demoAirlines: ["대한항공", "아시아나항공", "일본항공"],
+    demoFlights: [
+      { airline: "대한항공", stops: 0, priceFactor: 1.05, arrivalAirport: "HND", departLocal: "08:30", arriveLocal: "10:50", durationMinutes: 140, baggageIncluded: true },
+      { airline: "제주항공", stops: 0, priceFactor: 0.62, arrivalAirport: "NRT", departLocal: "06:55", arriveLocal: "09:20", durationMinutes: 145, baggageIncluded: false, baggageFeeKrw: 60_000 },
+      { airline: "일본항공", stops: 0, priceFactor: 1.12, arrivalAirport: "HND", departLocal: "18:40", arriveLocal: "21:05", durationMinutes: 145, baggageIncluded: true }
+    ],
     flightPerPersonKrw: 650_000,
     dailyPerPersonKrw: 130_000
   },
@@ -83,7 +112,11 @@ const PROFILES: DestinationProfile[] = [
       { ko: "천천히 말해 주세요.", local: "พูดช้าๆ หน่อยครับ/ค่ะ" },
       { ko: "도와주세요.", local: "ช่วยด้วยครับ/ค่ะ" }
     ],
-    demoAirlines: ["대한항공", "아시아나항공", "타이항공"],
+    demoFlights: [
+      { airline: "대한항공", stops: 0, priceFactor: 1.04 },
+      { airline: "아시아나항공", stops: 1, priceFactor: 0.92 },
+      { airline: "타이항공", stops: 0, priceFactor: 1.16 }
+    ],
     flightPerPersonKrw: 480_000,
     dailyPerPersonKrw: 90_000
   },
@@ -102,7 +135,11 @@ const PROFILES: DestinationProfile[] = [
       { ko: "천천히 말해 주세요.", local: "Xin nói chậm lại." },
       { ko: "도와주세요.", local: "Xin giúp tôi với." }
     ],
-    demoAirlines: ["대한항공", "베트남항공", "비엣젯항공"],
+    demoFlights: [
+      { airline: "대한항공", stops: 0, priceFactor: 1.04 },
+      { airline: "베트남항공", stops: 1, priceFactor: 0.92 },
+      { airline: "비엣젯항공", stops: 0, priceFactor: 0.8, baggageIncluded: false, baggageFeeKrw: 50_000 }
+    ],
     flightPerPersonKrw: 480_000,
     dailyPerPersonKrw: 90_000
   }
@@ -124,7 +161,11 @@ export const OTHER_DESTINATION: DestinationProfile = {
     { ko: "천천히 말해 주세요.", local: "Please speak slowly." },
     { ko: "도와주세요.", local: "Please help me." }
   ],
-  demoAirlines: ["대한항공", "아시아나항공", "외국 항공사"],
+  demoFlights: [
+    { airline: "대한항공", stops: 0, priceFactor: 1.04 },
+    { airline: "아시아나항공", stops: 1, priceFactor: 0.92 },
+    { airline: "외국 항공사", stops: 0, priceFactor: 1.16 }
+  ],
   flightPerPersonKrw: 1_200_000,
   dailyPerPersonKrw: 180_000
 };
@@ -133,4 +174,25 @@ export function profileForDestination(destination: string): DestinationProfile {
   const value = destination.trim().toLowerCase();
   if (!value) return OTHER_DESTINATION;
   return PROFILES.find((profile) => profile.keywords.some((keyword) => value.includes(keyword))) || OTHER_DESTINATION;
+}
+
+/** 통역 언어 선택지. 목적지에서 제안하되 사람이 바꿀 수 있습니다. */
+export type LanguageOption = { code: string; name: string; english: string; speechLang: string };
+export const LANGUAGE_OPTIONS: LanguageOption[] = [
+  { code: "ja", name: "일본어", english: "Japanese", speechLang: "ja-JP" },
+  { code: "en", name: "영어", english: "English", speechLang: "en-US" },
+  { code: "fr", name: "프랑스어", english: "French", speechLang: "fr-FR" },
+  { code: "th", name: "태국어", english: "Thai", speechLang: "th-TH" },
+  { code: "vi", name: "베트남어", english: "Vietnamese", speechLang: "vi-VN" },
+  { code: "zh", name: "중국어", english: "Chinese (Simplified)", speechLang: "zh-CN" }
+];
+
+export function languageOption(code: string | undefined) {
+  return LANGUAGE_OPTIONS.find((option) => option.code === code) || null;
+}
+
+/** 목적지에 맞는 기본 통역 언어 코드. 모르는 목적지는 영어. */
+export function suggestedLanguageCode(destination: string) {
+  const place = profileForDestination(destination);
+  return LANGUAGE_OPTIONS.find((option) => option.speechLang === place.speechLang)?.code || "en";
 }

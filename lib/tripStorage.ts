@@ -7,7 +7,8 @@
 
 import {
   BUDGET_STYLES,
-  DEMO_ITINERARY,
+  LEGACY_DEMO_NAMES,
+  MAX_JOURNAL_EVENTS,
   MAX_TRIP_DAYS,
   TRAVEL_PREFERENCES,
   clampTravelers,
@@ -17,6 +18,7 @@ import {
   type FlightOffer,
   type ItineraryItem,
   type ItineraryStatus,
+  type JournalEvent,
   type TravelPreference,
   type Trip,
   type TripProfile,
@@ -72,7 +74,8 @@ function coerceProfile(value: unknown, base: TripProfile): TripProfile {
     budget: oneOf<BudgetStyle>(data.budget, BUDGET_STYLES, base.budget),
     preference: oneOf<TravelPreference>(data.preference, TRAVEL_PREFERENCES, base.preference),
     hotel: text(data.hotel, base.hotel, 160),
-    emergencyNumber: text(data.emergencyNumber, base.emergencyNumber, 20)
+    emergencyNumber: text(data.emergencyNumber, base.emergencyNumber, 20),
+    travelerName: text(data.travelerName, base.travelerName, 20)
   };
 }
 
@@ -89,6 +92,7 @@ function coerceItinerary(value: unknown, fallbackSource: DataSource): ItineraryI
       name,
       note: text(item.note, "", 200),
       status: oneOf<ItineraryStatus>(item.status, ITINERARY_STATUSES, "planned"),
+      statusAt: isoOrNull(item.statusAt),
       source: oneOf<DataSource>(item.source, SOURCES, fallbackSource)
     }];
   });
@@ -108,9 +112,32 @@ function coerceOffers(value: unknown): FlightOffer[] {
       airlineNames: Array.isArray(offer.airlineNames) ? offer.airlineNames.filter((name): name is string => typeof name === "string").slice(0, 4) : [],
       stops: typeof offer.stops === "number" ? Math.max(0, Math.round(offer.stops)) : 0,
       totalPrice: offer.totalPrice,
-      currency: "KRW"
+      currency: "KRW",
+      arrivalAirport: typeof offer.arrivalAirport === "string" ? offer.arrivalAirport.slice(0, 8) : undefined,
+      departLocal: typeof offer.departLocal === "string" ? offer.departLocal.slice(0, 5) : undefined,
+      arriveLocal: typeof offer.arriveLocal === "string" ? offer.arriveLocal.slice(0, 5) : undefined,
+      durationMinutes: typeof offer.durationMinutes === "number" ? Math.max(0, Math.round(offer.durationMinutes)) : undefined,
+      baggageIncluded: typeof offer.baggageIncluded === "boolean" ? offer.baggageIncluded : undefined,
+      baggageFeeKrw: typeof offer.baggageFeeKrw === "number" ? Math.max(0, offer.baggageFeeKrw) : undefined
     }];
   });
+}
+
+function coerceLocation(value: unknown): JournalEvent["location"] {
+  if (!isObject(value)) return null;
+  const { lat, lng, accuracy } = value;
+  if (typeof lat !== "number" || typeof lng !== "number" || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { lat, lng, accuracy: typeof accuracy === "number" && Number.isFinite(accuracy) ? accuracy : 0 };
+}
+
+function coerceEvents(value: unknown): JournalEvent[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(isObject).flatMap((event, index) => {
+    const at = isoOrNull(event.at);
+    if (!at || (event.type !== "checkin" && event.type !== "hotel_arrival")) return [];
+    const type: JournalEvent["type"] = event.type;
+    return [{ id: text(event.id, `event-${index}`, 80), type, at, location: coerceLocation(event.location), shareOpened: event.shareOpened === true }];
+  }).slice(-MAX_JOURNAL_EVENTS);
 }
 
 /** 저장된 v1 Trip을 검증합니다. 모양이 깨진 필드는 기본값으로 채웁니다. */
@@ -127,13 +154,13 @@ export function parseStoredTrip(value: unknown, now: string): Trip | null {
     itinerary: coerceItinerary(value.itinerary, "user"),
     flightOffers: coerceOffers(value.flightOffers),
     priceWatch: { mode: priceWatch.mode === "demo" ? "demo" : "off", updatedAt: isoOrNull(priceWatch.updatedAt) },
-    journal: { lastCheckinAt: isoOrNull(journal.lastCheckinAt) },
+    journal: { lastCheckinAt: isoOrNull(journal.lastCheckinAt), events: coerceEvents(journal.events) },
     createdAt: isoOrNull(value.createdAt) || now,
     updatedAt: isoOrNull(value.updatedAt) || now
   };
 }
 
-const DEMO_NAMES = new Set(DEMO_ITINERARY.map((item) => item.name));
+const DEMO_NAMES = new Set(LEGACY_DEMO_NAMES);
 
 /** 예전 두 저장소를 하나의 Trip으로 합칩니다. 둘 다 없으면 null. */
 export function migrateLegacy(demo: unknown, planning: unknown, now: string): Trip | null {
@@ -144,9 +171,10 @@ export function migrateLegacy(demo: unknown, planning: unknown, now: string): Tr
   const form = isObject(planningData.form) ? planningData.form : {};
   // 여행 설정의 목적지가 계획 저장 때마다 갱신되던 값이라 우선합니다.
   const profile = coerceProfile({ ...form, destination: demoData.destination ?? form.destination, hotel: demoData.hotel, emergencyNumber: demoData.emergencyNumber }, base.profile);
+  // 예전 저장소에는 파리 데모 값만 있었으므로, 저장된 장소가 없으면 빈 일정으로 시작합니다.
   const itinerary = isObject(demo) && Array.isArray(demoData.places)
     ? coerceItinerary(demoData.places, "user").map((item) => ({ ...item, source: DEMO_NAMES.has(item.name) ? ("demo" as const) : item.source }))
-    : base.itinerary;
+    : [];
   return {
     ...base,
     profile,
@@ -154,7 +182,7 @@ export function migrateLegacy(demo: unknown, planning: unknown, now: string): Tr
     // 예전 항공 후보는 가격이 문자열인 데모라 옮기지 않고 비워 둡니다(다시 조회하면 새로 만듭니다).
     flightOffers: [],
     priceWatch: { mode: planningData.priceMonitoring === true ? "demo" : "off", updatedAt: isoOrNull(planningData.savedAt) },
-    journal: { lastCheckinAt: isoOrNull(demoData.lastCheckin) }
+    journal: { lastCheckinAt: isoOrNull(demoData.lastCheckin), events: [] }
   };
 }
 

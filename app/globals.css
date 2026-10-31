@@ -352,3 +352,92 @@ a.button { display: inline-flex; align-items: center; justify-content: center; }
 
 /* P0: 날짜 오류처럼 진행을 막는 안내는 경고색으로 구분합니다. */
 .notice.danger-notice { background: var(--rose); color: var(--rose-ink); font-weight: 700; }
+
+/* ---------------------------------------------------------------------------
+   P1: 역할 선택 · 부모님 화면 — 본문 20px, 주요 버튼 60px 이상, 한 화면 한 행동
+   --------------------------------------------------------------------------- */
+.role-shell, .traveler-shell { min-height: 100vh; background: var(--paper); }
+.role-header, .traveler-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--navy); color: #fff; }
+.role-header strong, .traveler-header strong { display: block; font-size: 18px; }
+.role-header span, .traveler-header span { display: block; font-size: 15px; color: #d3e2ea; }
+.role-main, .traveler-main { max-width: 560px; margin: 0 auto; padding: 20px 16px 48px; font-size: 20px; }
+.role-main h1 { font-size: 30px; margin: 8px 0; }
+.lead { font-size: 20px; line-height: 1.5; color: var(--ink); }
+.role-card { display: grid; gap: 6px; width: 100%; margin: 14px 0; padding: 22px; text-align: left; border: 3px solid var(--line); border-radius: 20px; background: #fff; color: var(--ink); }
+.role-card strong { font-size: 24px; }
+.role-card span { font-size: 17px; color: var(--muted); }
+.role-card .role-emoji { font-size: 36px; color: inherit; }
+.role-card.remembered { border-color: #0b5fd6; }
+.role-card:focus-visible { outline: 3px solid #0b5fd6; outline-offset: 2px; }
+
+.traveler-header { justify-content: space-between; position: sticky; top: 0; z-index: 10; }
+.traveler-switch { min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px; border: 1px solid rgba(255,255,255,.6); border-radius: 12px; font-size: 15px; font-weight: 700; color: #fff; }
+.traveler-header :focus-visible { outline-color: #fff; }
+.back-button { min-height: 56px; padding: 0 18px; border: 2px solid var(--line); border-radius: 14px; background: #fff; font-size: 19px; font-weight: 800; color: var(--ink); }
+.traveler-title { font-size: 28px; margin: 16px 0 10px; }
+.now-card { display: grid; gap: 12px; padding: 22px; border-radius: 22px; background: linear-gradient(135deg, #0f2d45 0%, #0b5563 60%, #1f7a62 100%); color: #fff; }
+.now-label { font-size: 17px; font-weight: 800; color: #b9f7da; }
+.now-name { font-size: clamp(32px, 9vw, 44px); font-weight: 800; line-height: 1.15; letter-spacing: -0.03em; overflow-wrap: anywhere; }
+.now-name.small-name { font-size: 28px; }
+.now-note { margin: 0; font-size: 18px; color: #e3f2f2; }
+.now-after { margin: 4px 0 0; font-size: 17px; color: #d3e8e8; }
+.now-card :focus-visible { outline-color: #fff; }
+.button.huge { width: 100%; min-height: 68px; padding: 16px 20px; font-size: 22px; border-radius: 18px; }
+.now-card .button.huge { background: #fff; color: var(--navy); }
+.button.big.light { width: 100%; }
+.button.kakao { width: 100%; background: #fee500; color: #191600; }
+.button.wide { width: 100%; margin-top: 16px; }
+.text-button { min-height: 48px; padding: 0 4px; border: 0; background: transparent; font-size: 17px; font-weight: 700; color: inherit; text-decoration: underline; text-align: left; }
+.text-button.inline { min-height: 0; color: var(--mint-ink); }
+.tile-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+.tile { display: grid; justify-items: center; gap: 8px; min-height: 120px; padding: 16px 10px; border: 2px solid var(--line); border-radius: 18px; background: #fff; font-size: 20px; font-weight: 800; color: var(--ink); text-align: center; }
+.tile span { font-size: 34px; }
+.tile.danger { border-color: #e9a9a3; background: #fff5f4; }
+.stack { display: grid; gap: 14px; }
+.check-row { display: flex; align-items: center; gap: 12px; min-height: 48px; font-size: 18px; font-weight: 700; }
+.check-row input { width: 28px; height: 28px; flex: none; }
+.plan-list { display: grid; gap: 12px; }
+.plan-item { padding: 16px; border: 2px solid var(--line); border-radius: 16px; background: #fff; }
+.plan-item p { margin: 6px 0; font-size: 17px; }
+.plan-item-head { display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: 21px; }
+.plan-item.status-completed, .plan-item.status-skipped { opacity: .7; }
+.chip { flex: none; padding: 4px 10px; border-radius: 99px; background: #eef4f8; font-size: 15px; font-weight: 800; }
+.traveler-main .notice { font-size: 17px; }
+.traveler-main .small { font-size: 15px; }
+.traveler-main .field label { font-size: 17px; }
+.traveler-main hr { width: 100%; border: 0; border-top: 1px solid var(--line); }
+
+/* 통역 */
+.translator { display: grid; gap: 14px; }
+.direction-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.direction-row .button { white-space: normal; line-height: 1.3; }
+.direction-row small { font-size: 15px; font-weight: 700; }
+.big-text { font-size: 22px !important; }
+.textarea.big-text { min-height: 110px; }
+.translation-result strong { font-size: 30px; line-height: 1.35; overflow-wrap: anywhere; }
+.phrase-block h3 { font-size: 18px; margin: 4px 0 8px; }
+.enlarged { position: fixed; inset: 0; z-index: 50; display: grid; align-content: center; gap: 28px; padding: 24px; background: #0f2d45; color: #fff; text-align: center; }
+.enlarged strong { font-size: clamp(36px, 10vw, 64px); line-height: 1.3; overflow-wrap: anywhere; }
+.multiline { white-space: pre-line; font-size: 18px !important; }
+.candidate-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.candidate-actions span { flex: 1 1 100%; font-weight: 800; }
+.currency.large .rate-result strong { font-size: 36px; }
+.currency { display: grid; gap: 12px; }
+.photo-place { display: grid; gap: 12px; }
+
+/* 항공 + 숙소 묶음 비교 */
+.bundle-compare { display: grid; gap: 14px; }
+.bundle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.bundle-card { display: grid; gap: 8px; padding: 16px; border: 2px solid var(--line); border-radius: 16px; background: #fff; }
+.bundle-label { justify-self: start; padding: 4px 10px; border-radius: 99px; background: #e8f1ff; color: #0b5fd6; font-size: 14px; font-weight: 800; }
+.bundle-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; font-size: 17px; }
+.bundle-total { font-size: 24px; font-weight: 800; }
+.bundle-total small { font-size: 14px; font-weight: 600; color: var(--muted); }
+.bundle-lines { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6; }
+.bundle-reasons { margin: 0; font-size: 14px; color: var(--muted); }
+.bundle-warnings { margin: 0; padding: 10px 10px 10px 28px; border-radius: 12px; background: var(--amber); color: var(--amber-ink); font-size: 14px; line-height: 1.5; }
+.fatigue { padding: 3px 9px; border-radius: 99px; font-size: 14px; font-weight: 800; }
+.fatigue-낮음 { background: var(--mint); color: var(--mint-ink); }
+.fatigue-보통 { background: var(--amber); color: var(--amber-ink); }
+.fatigue-높음 { background: var(--rose); color: var(--rose-ink); }
+.share-fallback { min-height: 120px; font-size: 17px; }

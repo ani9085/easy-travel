@@ -71,7 +71,7 @@ export function aiHeaders(accessCode: string) {
   return headers;
 }
 
-export type AiResponse = { result?: string; error?: string; mode?: string };
+export type AiResponse = { result?: string; error?: string; mode?: string; code?: string };
 
 export async function postAi(body: Record<string, unknown>): Promise<{ ok: boolean; data: AiResponse }> {
   try {

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LANGUAGE_OPTIONS, languageOption, profileForDestination, suggestedLanguageCode } from "../lib/destinations.ts";
+import { AccessCodePrompt } from "./AccessCodePrompt.tsx";
 import { postAi } from "./shared.ts";
 
 type Direction = "to_local" | "to_korean";
@@ -23,6 +24,7 @@ export function Translator({ destination }: { destination: string }) {
   const [result, setResult] = useState<Result | null>(null);
   const [notice, setNotice] = useState("");
   const [enlarged, setEnlarged] = useState(false);
+  const [needCode, setNeedCode] = useState(false);
   const language = languageOption(languageCode) || LANGUAGE_OPTIONS[0];
   const place = profileForDestination(destination);
   const phrases = place.speechLang === language.speechLang ? place.phrases : [];
@@ -41,10 +43,11 @@ export function Translator({ destination }: { destination: string }) {
     setResult(null);
     setNotice("");
     const { ok, data } = await postAi({ task: "translate", text: value, destination, direction, language: language.code });
+    setNeedCode(data.code === "access_code_required");
     if (ok && data.mode === "openrouter" && data.result) {
       setResult({ source: value, translation: data.result, direction, languageName: language.name, speechLang: direction === "to_local" ? language.speechLang : "ko-KR" });
     } else {
-      setNotice(data.error || data.result || "번역 결과를 받지 못했어요. 아래 자주 쓰는 말을 눌러 보세요.");
+      if (data.code !== "access_code_required") setNotice(data.error || data.result || "번역 결과를 받지 못했어요. 아래 자주 쓰는 말을 눌러 보세요.");
     }
     setBusy(false);
   }
@@ -86,6 +89,7 @@ export function Translator({ destination }: { destination: string }) {
       </div>
       <button type="button" className="button big" onClick={translate} disabled={busy || !text.trim()}>{busy ? "번역 중…" : `${toLabel}로 바꾸기`}</button>
       {notice && <div className="notice" role="status">{notice}</div>}
+      {needCode && <AccessCodePrompt onSaved={() => { setNeedCode(false); void translate(); }} />}
       {result && (
         <div className="result-card translation-result">
           <span className="small">{result.direction === "to_local" ? `${result.languageName}로 보여주세요` : "한국어 뜻"} · AI 번역은 틀릴 수 있어요</span>

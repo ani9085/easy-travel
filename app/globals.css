@@ -441,3 +441,5 @@ a.button { display: inline-flex; align-items: center; justify-content: center; }
 .fatigue-보통 { background: var(--amber); color: var(--amber-ink); }
 .fatigue-높음 { background: var(--rose); color: var(--rose-ink); }
 .share-fallback { min-height: 120px; font-size: 17px; }
+.access-code { display: grid; gap: 10px; }
+.access-code strong { font-size: 19px; }

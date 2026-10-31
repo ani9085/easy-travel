@@ -21,6 +21,8 @@ const MAX_TOKENS: Record<AiTask, number> = { translate: 200, photo_location: 400
 
 // 10분 동안 한 사람(IP)당 번역 40회 또는 사진 10회 정도. 인스턴스 전체는 그 8배까지.
 const takeQuota = createRateLimiter({ windowMs: 10 * 60_000, maxPerClient: 40, maxTotal: 320 });
+// 접속 코드를 틀리는 요청은 따로 세어, 코드를 하나씩 맞혀 보는 시도를 늦춥니다.
+const takeCodeFailure = createRateLimiter({ windowMs: 10 * 60_000, maxPerClient: 10, maxTotal: 200 });
 
 const demoResults: Record<AiTask, string> = {
   translate: "데모 모드입니다. OpenRouter API 키를 연결하면 여행지 언어로 번역해 드려요.",
@@ -61,7 +63,11 @@ function reject(error: string, status: number, code: string, headers?: Record<st
 export async function POST(request: Request) {
   const expectedCode = process.env.EASY_TRAVEL_ACCESS_CODE;
   const codeOk = accessCodeMatches(request.headers.get("x-easy-travel-code"), expectedCode);
-  if (!codeOk) return reject("가족 접속 코드가 필요해요. ‘가족 여행 설정’에 보호자가 알려준 코드를 넣어 주세요.", 401, "access_code_required");
+  if (!codeOk) {
+    const failure = takeCodeFailure(clientKey(request.headers), 1, Date.now());
+    if (!failure.ok) return reject("코드를 너무 여러 번 틀렸어요. 잠시 뒤에 다시 넣어 주세요.", 429, "too_many_code_attempts", { "Retry-After": String(failure.retryAfterSeconds) });
+    return reject("가족 접속 코드가 필요해요. 보호자가 알려준 코드를 넣어 주세요.", 401, "access_code_required");
+  }
 
   const originRejection = checkOrigin(request.headers, Boolean(expectedCode) && codeOk);
   if (originRejection) return reject(originRejection.error, originRejection.status, originRejection.code);

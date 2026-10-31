@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, useState } from "react";
+import { AccessCodePrompt } from "./AccessCodePrompt.tsx";
 import { mapsDirectionsUrl, mapsSearchUrl, openMapsUrl, postAi } from "./shared.ts";
 
 // 서버(lib/server/aiGuard.ts)의 MAX_IMAGE_CHARS와 같은 값입니다.
@@ -51,6 +52,7 @@ export function PhotoPlace({ destination, onAddPlace }: { destination: string; o
   const [busy, setBusy] = useState(false);
   const [manualPlace, setManualPlace] = useState("");
   const [added, setAdded] = useState("");
+  const [needCode, setNeedCode] = useState(false);
 
   function clearPhoto() {
     setPhotoData("");
@@ -91,7 +93,9 @@ export function PhotoPlace({ destination, onAddPlace }: { destination: string; o
     setError("");
     setResult("");
     const { ok, data } = await postAi({ task: "photo_location", image: photoData, destination });
-    if (!ok || !data.result) setError(`${data.error || "사진을 살펴보지 못했어요."} 아래에 간판 글자나 장소 이름을 직접 적어 주세요.`);
+    setNeedCode(data.code === "access_code_required");
+    if (data.code === "access_code_required") setError("");
+    else if (!ok || !data.result) setError(`${data.error || "사진을 살펴보지 못했어요."} 아래에 간판 글자나 장소 이름을 직접 적어 주세요.`);
     else {
       setResult(data.result);
       setMode(data.mode || "");
@@ -118,6 +122,7 @@ export function PhotoPlace({ destination, onAddPlace }: { destination: string; o
         </>
       )}
       {error && <div className="notice">{error}</div>}
+      {needCode && <AccessCodePrompt onSaved={() => { setNeedCode(false); void analyze(); }} />}
       {result && (
         <div className="result-card">
           <span className="small">{mode === "demo" ? "데모 결과 · 실제 분석 아님" : "AI 추정 · 사진만으로는 틀릴 수 있어요"}</span>

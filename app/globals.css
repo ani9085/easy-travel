@@ -443,3 +443,4 @@ a.button { display: inline-flex; align-items: center; justify-content: center; }
 .share-fallback { min-height: 120px; font-size: 17px; }
 .access-code { display: grid; gap: 10px; }
 .access-code strong { font-size: 19px; }
+.stack .notice.success strong, .stack .notice.success span { display: block; }

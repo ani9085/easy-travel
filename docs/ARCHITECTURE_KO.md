@@ -107,3 +107,19 @@ lib/integrations/
 ```
 
 모든 결과에는 `source`·`fetchedAt`·`dataMode`·`limitations`를 붙이고, 화면은 이 값을 지우지 않습니다.
+
+## 8. P1 반영 (브랜치 `claude/p1-traveler-guardian`)
+
+```text
+app/page.tsx              역할 선택(easy-travel:role 기억, ?choose=1로 다시 고르기)
+app/traveler/page.tsx     부모님 화면 — #plan #translate #money #photo #arrival #help (휴대폰 뒤로 버튼 동작)
+app/guardian/page.tsx     보호자 화면 — 현황·계획·항공+숙소 비교·일정·설정
+components/hooks.tsx      useTrip(로드·저장·다른 탭 동기화), useHashView, LocalTime
+components/shared.ts      지도 URL, 전화, AI 호출, 카카오톡 공유(Web Share → 복사 → 화면 표시)
+components/Translator.tsx · CurrencyCalculator.tsx · PhotoPlace.tsx · BundleComparison.tsx
+lib/comparison.ts         예시 숙소(일본), 피로도, 총비용, 경고, 묶음 정렬·추천
+```
+
+- Trip v1에 하위 호환 필드 추가: `profile.travelerName`, `itinerary[].statusAt`, `journal.events[]`(checkin·hotel_arrival, 위치 선택, shareOpened), `FlightOffer`의 도착 공항·예시 시각·수하물. 저장된 예전 값은 기본값으로 채워 읽습니다(스키마 버전 유지).
+- 데모 기본 여행은 도쿄입니다. 예전 파리 데모 장소는 `LEGACY_DEMO_NAMES`로만 알아봅니다.
+- `/api/ai` 번역은 `direction`(to_local | to_korean)과 `language`(목록 안 코드)를 받습니다.

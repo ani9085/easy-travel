@@ -5,11 +5,14 @@
 // ---------------------------------------------------------------------------
 
 import { createHash, timingSafeEqual } from "node:crypto";
+import { languageOption } from "../destinations.ts";
 
 export type AiTask = "translate" | "photo_location";
 
+export type TranslateDirection = "to_local" | "to_korean";
+
 export type AiRequest =
-  | { task: "translate"; text: string; destination: string }
+  | { task: "translate"; text: string; destination: string; direction: TranslateDirection; language: string | null }
   | { task: "photo_location"; image: string; destination: string };
 
 export const MAX_BODY_BYTES = 4_500_000;
@@ -36,7 +39,10 @@ export function validateAiRequest(body: unknown): { ok: true; value: AiRequest }
   if (data.task === "translate") {
     if (typeof data.text !== "string" || !data.text.trim()) return { ok: false, status: 400, error: "번역할 문장이 비어 있어요.", code: "empty_text" };
     if (data.text.length > MAX_TRANSLATE_CHARS) return { ok: false, status: 413, error: `문장이 너무 길어요. ${MAX_TRANSLATE_CHARS.toLocaleString("ko-KR")}자 이내로 줄여 주세요.`, code: "text_too_long" };
-    return { ok: true, value: { task: "translate", text: stripControl(data.text).trim(), destination } };
+    const direction: TranslateDirection = data.direction === "to_korean" ? "to_korean" : "to_local";
+    if (data.language !== undefined && !languageOption(typeof data.language === "string" ? data.language : undefined)) return { ok: false, status: 400, error: "지원하지 않는 언어예요.", code: "bad_language" };
+    const language = typeof data.language === "string" ? data.language : null;
+    return { ok: true, value: { task: "translate", text: stripControl(data.text).trim(), destination, direction, language } };
   }
   if (data.task === "photo_location") {
     if (typeof data.image !== "string") return { ok: false, status: 400, error: "분석할 사진이 없어요.", code: "no_image" };

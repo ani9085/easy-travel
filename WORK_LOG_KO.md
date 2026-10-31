@@ -135,3 +135,10 @@ Claude의 첫 작업은 CLAUDE_HANDOFF_KO.md의 우선순위 1순위부터 읽�
   5. 문서
 - 검증: `npm run typecheck`·`npm run lint`·`npm test`(38개 통과)·`npm run build` 통과. 로컬 프로덕션 서버(TZ=UTC)에서 API 401/403/400/429, 보안 헤더, 하이드레이션·CSP 콘솔 오류 없음, T01·T02 흐름, 375px·900px 가로 스크롤 없음 확인. 실기기·OpenRouter 실제 호출·Vercel 미리보기는 미실행([TEST_PLAN](./docs/TEST_PLAN_KO.md) §5).
 - 남은 결정: main 병합·push 승인, Vercel 환경변수(`EASY_TRAVEL_ACCESS_CODE`, `OPENROUTER_SITE_URL`), OpenRouter 키 사용 한도, [외부 API 질문 5개](./docs/EXTERNAL_API_DECISIONS_KO.md).
+
+## 10. P1 — 부모님/보호자 화면 분리와 여행 중 기능 (2026-10-31, Claude Opus)
+
+- 사용자 결정: 1차 지역 일본, 가격 감시 하루 1회, 보호자 알림은 카카오톡(P1 공유 창 → P2 나에게 보내기), 로그인은 제안안(보호자 카카오 로그인·부모님 초대 링크)으로 P2 전에 재확인, P1 바로 진행.
+- P0: PR #1 생성, Vercel 미리보기 빌드 통과. `OPENROUTER_API_KEY`를 Preview에도 적용하고 미리보기에서 실제 번역·사진 호출 확인. main 병합은 자동 모드 보안 규칙상 사용자가 직접 진행.
+- P1 구현: 역할 선택·부모님 화면·보호자 화면, 양방향 텍스트 통역·읽어주기, 일정 상태 기록·되돌리기, 숙소 도착/안부/도움 요청 + 카카오톡 공유, 일본 예시 숙소와 항공+숙소 묶음 비교(피로도·총비용·경고).
+- 검증: 타입검사·ESLint·테스트 56개·빌드 통과, 로컬 프로덕션(TZ=UTC) 375/900px 수동 확인. 실기기 공유 창·음성은 미확인.

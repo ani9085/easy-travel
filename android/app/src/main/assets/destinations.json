@@ -1,0 +1,360 @@
+{
+  "generatedFrom": "lib/destinations.ts",
+  "profiles": [
+    {
+      "id": "france",
+      "country": "프랑스",
+      "keywords": [
+        "프랑스",
+        "파리",
+        "니스",
+        "리옹",
+        "마르세유",
+        "france",
+        "paris",
+        "nice",
+        "lyon"
+      ],
+      "languageName": "프랑스어",
+      "languageEnglish": "French",
+      "speechLang": "fr-FR",
+      "currency": "EUR",
+      "timeZone": "Europe/Paris",
+      "phrases": [
+        {
+          "ko": "화장실이 어디예요?",
+          "local": "Où sont les toilettes ?"
+        },
+        {
+          "ko": "이 주소로 가 주세요.",
+          "local": "À cette adresse, s'il vous plaît."
+        },
+        {
+          "ko": "천천히 말해 주세요.",
+          "local": "Parlez lentement, s'il vous plaît."
+        },
+        {
+          "ko": "도와주세요.",
+          "local": "Aidez-moi, s'il vous plaît."
+        }
+      ],
+      "demoFlights": [
+        {
+          "airline": "대한항공",
+          "stops": 0,
+          "priceFactor": 1.04
+        },
+        {
+          "airline": "아시아나항공",
+          "stops": 1,
+          "priceFactor": 0.92
+        },
+        {
+          "airline": "에어프랑스",
+          "stops": 0,
+          "priceFactor": 1.16
+        }
+      ],
+      "flightPerPersonKrw": 1200000,
+      "dailyPerPersonKrw": 180000
+    },
+    {
+      "id": "japan",
+      "country": "일본",
+      "keywords": [
+        "일본",
+        "도쿄",
+        "오사카",
+        "교토",
+        "후쿠오카",
+        "삿포로",
+        "오키나와",
+        "나고야",
+        "japan",
+        "tokyo",
+        "osaka",
+        "kyoto",
+        "fukuoka",
+        "sapporo"
+      ],
+      "languageName": "일본어",
+      "languageEnglish": "Japanese",
+      "speechLang": "ja-JP",
+      "currency": "JPY",
+      "timeZone": "Asia/Tokyo",
+      "phrases": [
+        {
+          "ko": "화장실이 어디예요?",
+          "local": "お手洗いはどこですか？"
+        },
+        {
+          "ko": "이 주소로 가 주세요.",
+          "local": "この住所までお願いします。"
+        },
+        {
+          "ko": "천천히 말해 주세요.",
+          "local": "ゆっくり話してください。"
+        },
+        {
+          "ko": "도와주세요.",
+          "local": "助けてください。"
+        },
+        {
+          "ko": "이거 얼마예요?",
+          "local": "これはいくらですか？"
+        },
+        {
+          "ko": "카드로 계산할 수 있어요?",
+          "local": "カードで払えますか？"
+        },
+        {
+          "ko": "역은 어느 쪽이에요?",
+          "local": "駅はどちらですか？"
+        },
+        {
+          "ko": "엘리베이터가 어디예요?",
+          "local": "エレベーターはどこですか？"
+        }
+      ],
+      "demoFlights": [
+        {
+          "airline": "대한항공",
+          "stops": 0,
+          "priceFactor": 1.05,
+          "arrivalAirport": "HND",
+          "departLocal": "08:30",
+          "arriveLocal": "10:50",
+          "durationMinutes": 140,
+          "baggageIncluded": true
+        },
+        {
+          "airline": "제주항공",
+          "stops": 0,
+          "priceFactor": 0.62,
+          "arrivalAirport": "NRT",
+          "departLocal": "06:55",
+          "arriveLocal": "09:20",
+          "durationMinutes": 145,
+          "baggageIncluded": false,
+          "baggageFeeKrw": 60000
+        },
+        {
+          "airline": "일본항공",
+          "stops": 0,
+          "priceFactor": 1.12,
+          "arrivalAirport": "HND",
+          "departLocal": "18:40",
+          "arriveLocal": "21:05",
+          "durationMinutes": 145,
+          "baggageIncluded": true
+        }
+      ],
+      "flightPerPersonKrw": 650000,
+      "dailyPerPersonKrw": 130000
+    },
+    {
+      "id": "thailand",
+      "country": "태국",
+      "keywords": [
+        "태국",
+        "방콕",
+        "치앙마이",
+        "푸켓",
+        "파타야",
+        "thailand",
+        "bangkok",
+        "chiang mai",
+        "phuket"
+      ],
+      "languageName": "태국어",
+      "languageEnglish": "Thai",
+      "speechLang": "th-TH",
+      "currency": "THB",
+      "timeZone": "Asia/Bangkok",
+      "phrases": [
+        {
+          "ko": "화장실이 어디예요?",
+          "local": "ห้องน้ำอยู่ที่ไหนครับ/คะ"
+        },
+        {
+          "ko": "이 주소로 가 주세요.",
+          "local": "ไปที่อยู่นี้ครับ/ค่ะ"
+        },
+        {
+          "ko": "천천히 말해 주세요.",
+          "local": "พูดช้าๆ หน่อยครับ/ค่ะ"
+        },
+        {
+          "ko": "도와주세요.",
+          "local": "ช่วยด้วยครับ/ค่ะ"
+        }
+      ],
+      "demoFlights": [
+        {
+          "airline": "대한항공",
+          "stops": 0,
+          "priceFactor": 1.04
+        },
+        {
+          "airline": "아시아나항공",
+          "stops": 1,
+          "priceFactor": 0.92
+        },
+        {
+          "airline": "타이항공",
+          "stops": 0,
+          "priceFactor": 1.16
+        }
+      ],
+      "flightPerPersonKrw": 480000,
+      "dailyPerPersonKrw": 90000
+    },
+    {
+      "id": "vietnam",
+      "country": "베트남",
+      "keywords": [
+        "베트남",
+        "다낭",
+        "하노이",
+        "호치민",
+        "나트랑",
+        "푸꾸옥",
+        "vietnam",
+        "da nang",
+        "danang",
+        "hanoi",
+        "ho chi minh",
+        "nha trang"
+      ],
+      "languageName": "베트남어",
+      "languageEnglish": "Vietnamese",
+      "speechLang": "vi-VN",
+      "currency": "VND",
+      "timeZone": "Asia/Ho_Chi_Minh",
+      "phrases": [
+        {
+          "ko": "화장실이 어디예요?",
+          "local": "Nhà vệ sinh ở đâu ạ?"
+        },
+        {
+          "ko": "이 주소로 가 주세요.",
+          "local": "Cho tôi đến địa chỉ này."
+        },
+        {
+          "ko": "천천히 말해 주세요.",
+          "local": "Xin nói chậm lại."
+        },
+        {
+          "ko": "도와주세요.",
+          "local": "Xin giúp tôi với."
+        }
+      ],
+      "demoFlights": [
+        {
+          "airline": "대한항공",
+          "stops": 0,
+          "priceFactor": 1.04
+        },
+        {
+          "airline": "베트남항공",
+          "stops": 1,
+          "priceFactor": 0.92
+        },
+        {
+          "airline": "비엣젯항공",
+          "stops": 0,
+          "priceFactor": 0.8,
+          "baggageIncluded": false,
+          "baggageFeeKrw": 50000
+        }
+      ],
+      "flightPerPersonKrw": 480000,
+      "dailyPerPersonKrw": 90000
+    }
+  ],
+  "other": {
+    "id": "other",
+    "country": "기타 지역",
+    "keywords": [],
+    "languageName": "영어",
+    "languageEnglish": "",
+    "speechLang": "en-US",
+    "currency": null,
+    "timeZone": null,
+    "phrases": [
+      {
+        "ko": "화장실이 어디예요?",
+        "local": "Where is the restroom?"
+      },
+      {
+        "ko": "이 주소로 가 주세요.",
+        "local": "Please take me to this address."
+      },
+      {
+        "ko": "천천히 말해 주세요.",
+        "local": "Please speak slowly."
+      },
+      {
+        "ko": "도와주세요.",
+        "local": "Please help me."
+      }
+    ],
+    "demoFlights": [
+      {
+        "airline": "대한항공",
+        "stops": 0,
+        "priceFactor": 1.04
+      },
+      {
+        "airline": "아시아나항공",
+        "stops": 1,
+        "priceFactor": 0.92
+      },
+      {
+        "airline": "외국 항공사",
+        "stops": 0,
+        "priceFactor": 1.16
+      }
+    ],
+    "flightPerPersonKrw": 1200000,
+    "dailyPerPersonKrw": 180000
+  },
+  "languages": [
+    {
+      "code": "ja",
+      "name": "일본어",
+      "english": "Japanese",
+      "speechLang": "ja-JP"
+    },
+    {
+      "code": "en",
+      "name": "영어",
+      "english": "English",
+      "speechLang": "en-US"
+    },
+    {
+      "code": "fr",
+      "name": "프랑스어",
+      "english": "French",
+      "speechLang": "fr-FR"
+    },
+    {
+      "code": "th",
+      "name": "태국어",
+      "english": "Thai",
+      "speechLang": "th-TH"
+    },
+    {
+      "code": "vi",
+      "name": "베트남어",
+      "english": "Vietnamese",
+      "speechLang": "vi-VN"
+    },
+    {
+      "code": "zh",
+      "name": "중국어",
+      "english": "Chinese (Simplified)",
+      "speechLang": "zh-CN"
+    }
+  ]
+}

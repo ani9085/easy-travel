@@ -19,6 +19,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko">
+      <head>
+        {/* 배포 보호(Vercel Authentication)가 켜져 있어도 설치 정보를 읽을 수 있게 쿠키를 함께 보냅니다. */}
+        <link rel="manifest" href="/manifest.webmanifest" crossOrigin="use-credentials" />
+      </head>
       <body>
         {children}
         <ServiceWorker />

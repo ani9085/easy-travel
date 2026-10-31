@@ -151,9 +151,18 @@ Claude의 첫 작업은 CLAUDE_HANDOFF_KO.md의 우선순위 1순위부터 읽�
 - 항공 화면은 더 이상 가짜 가격을 표시하지 않습니다. `DUFFEL_ACCESS_TOKEN`이 있을 때만 서버 API에서 실제 검색 결과를 받고, 없으면 설정 안내를 표시합니다.
 - 가격 감시는 목표 가격과 하루 2회 조회 시각(08:00, 20:00)을 저장합니다. 현재 웹 서버만으로 백그라운드 실행을 가장하지 않으며, APK에서는 Android WorkManager 연결이 필요합니다.
 - 항공권을 선택·예약 처리한 뒤에만 OpenRouter 여행 일정·숙소 후보 추천을 요청할 수 있습니다. AI 결과는 사용자가 수정·확정해야 일정에 반영됩니다.
-- 네이티브 앱 계획은 `docs/NATIVE_APK_PLAN_KO.md`에 기록했습니다. 현재 환경에는 Android SDK/ADB/Gradle이 없어 APK 바이너리는 아직 생성하지 않았습니다.
+- 네이티브 앱 계획은 `docs/NATIVE_APK_PLAN_KO.md`에 기록했습니다. Android Studio·SDK·ADB·JDK 21을 재확인하고 Capacitor Android debug APK를 생성했습니다. 아직 실기기/에뮬레이터 설치 검증은 하지 않았습니다.
 - 검증: `npm run check` 통과(타입검사·lint·테스트 61개·build), 로컬 메뉴 전환 및 빈 초안/실제 항공 설정 오류/AI 키 미설정 상태를 브라우저에서 확인했습니다.
 - 배포 확인: GitHub `main` push는 완료했으나 Vercel 공개 주소가 현재 Vercel 로그인 화면으로 보호되어 부모님 기기에서 바로 접근 가능한 상태인지는 확인하지 못했습니다. Deployment Protection 설정을 확인해야 합니다.
+
+## 13. Capacitor Android debug APK 생성 (2026-10-31, Codex)
+
+- PATH에 등록되지 않았던 Android SDK·ADB·Android Studio를 실제 경로에서 확인했습니다. Android Studio 내장 JDK 21.0.10, SDK API 36 계열, ADB 37.0.0을 사용했습니다.
+- npm 인증서 문제는 Node 시스템 CA 옵션으로 해결했고, Gradle 인증서 문제는 로컬 Gradle truststore를 사용해 SSL 검증을 유지한 채 해결했습니다.
+- `@capacitor/core`, `@capacitor/android`, `@capacitor/cli`를 추가하고 `capacitor.config.ts`, `android/` 프로젝트, `public/index.html` fallback을 생성했습니다.
+- 한글 workspace 경로 때문에 Android Gradle Plugin이 중단되어 `android.overridePathCheck=true`를 추가했습니다.
+- 로컬 Next 서버를 에뮬레이터 주소로 연결한 뒤 `assembleDebug`가 성공했습니다. APK 경로는 `android/app/build/outputs/apk/debug/app-debug.apk`입니다.
+- 이 APK는 현재 개발 서버 연결용 테스트 빌드입니다. Vercel 로그인 보호를 해제·조정한 운영 URL과 실제 서버 저장소가 준비되면 부모님 배포용 APK를 다시 빌드해야 합니다.
 
 ## 12. 공동여행 벤치마킹 반영 (2026-10-31, Codex)
 

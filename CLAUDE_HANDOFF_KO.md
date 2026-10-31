@@ -6,7 +6,7 @@
 
 easy-travel은 부모님·가족·친구가 여행을 함께 계획하고, 여행자는 여행 중 필요한 행동을 크게 확인하며, 동행자와 보호자는 동의된 일정과 상태를 참고할 수 있게 하는 여행 도우미입니다.
 
-현재 저장소에는 **여행 전 계획·여행 중 보조 MVP**가 있습니다. 초기 여행은 빈 초안으로 시작하며, 실항공 검색은 Duffel 토큰이 있을 때만 동작합니다. 예약·가족 서버 공유·푸시 알림·실제 APK 패키징은 후속 연결 대상입니다.
+현재 저장소에는 **여행 전 계획·여행 중 보조 MVP와 Capacitor Android debug APK 골격**이 있습니다. 초기 여행은 빈 초안으로 시작하며, 실항공 검색은 Duffel 토큰이 있을 때만 동작합니다. 예약·가족 서버 공유·푸시 알림·WorkManager 연결·운영용 APK 패키징은 후속 연결 대상입니다.
 
 > **2026-10-31 갱신 (Claude Opus, 브랜치 `claude/p0-hardening`, main 병합 전)**
 > 전면 감사와 P0 안정화를 마쳤습니다. 이제 기준 문서는 `docs/`입니다. [AUDIT](./docs/AUDIT_KO.md) · [ARCHITECTURE](./docs/ARCHITECTURE_KO.md) · [PRODUCT_REQUIREMENTS](./docs/PRODUCT_REQUIREMENTS_KO.md) · [ROADMAP](./docs/ROADMAP_KO.md) · [TEST_PLAN](./docs/TEST_PLAN_KO.md) · [EXTERNAL_API_DECISIONS](./docs/EXTERNAL_API_DECISIONS_KO.md)
@@ -159,10 +159,10 @@ easy-travel을 이어서 작업해줘.
 - 항공 결과는 Duffel API가 설정된 경우에만 표시하며, 토큰이 없을 때 가짜 항공권을 보여주지 않습니다.
 - 가격 감시는 목표가와 하루 2회 시각을 저장하지만, 실제 백그라운드 실행은 네이티브 APK의 WorkManager 구현이 남아 있습니다.
 - 항공권 예약 상태가 된 뒤 OpenRouter로 일정·숙소 초안을 생성하고, 사용자가 수정·확정해야 일정에 반영합니다.
-- `npm run check`와 `npm run build`가 통과했습니다. 현재 개발 환경에는 Android SDK/ADB/Gradle이 없어 APK 자체는 아직 빌드하지 않았습니다.
+- `npm run check`와 `npm run build`가 통과했습니다. Android Studio SDK·ADB·JDK 21을 확인했고 Capacitor Android debug APK 빌드도 성공했습니다. 아직 연결된 실기기나 에뮬레이터는 없습니다.
 - GitHub push는 완료했습니다. Vercel 공개 URL은 Vercel 로그인 화면으로 보호되어 있으므로 Deployment Protection 설정을 확인해야 합니다.
 
-다음 작업자는 먼저 `docs/NATIVE_APK_PLAN_KO.md`를 읽고 Android Studio/SDK 설치 후 Capacitor Android 프로젝트와 WorkManager 브리지를 추가하세요. API 키는 계속 서버 환경변수에만 두고, 실제 항공·AI 결과가 없을 때 목업으로 대체하지 마세요.
+다음 작업자는 먼저 `docs/NATIVE_APK_PLAN_KO.md`를 읽고 연결된 Android 기기에서 debug APK를 설치·확인한 뒤, WorkManager/알림/권한 브리지를 추가하세요. API 키는 계속 서버 환경변수에만 두고, 실제 항공·AI 결과가 없을 때 목업으로 대체하지 마세요.
 
 ## 10. 공동여행 벤치마킹 반영 (2026-10-31)
 

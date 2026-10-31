@@ -59,7 +59,7 @@ DUFFEL_ACCESS_TOKEN=...          # 실제 항공 조회용 서버 Secret. 없으
 EASY_TRAVEL_APP_ORIGINS=capacitor://localhost  # APK WebView Origin을 허용할 때만 추가
 ```
 
-공개 배포 전에 할 일: OpenRouter 대시보드에서 키 사용 한도를 걸고, 필요하면 Duffel 토큰을 추가하고, `EASY_TRAVEL_ACCESS_CODE`를 설정한 뒤 Vercel 배포 보호를 끕니다. 부모님 기기에서는 ‘여행 설정 → AI 접속 코드’에 코드를 한 번 넣으면 됩니다. APK 전환 계획은 [네이티브 APK 계획](./docs/NATIVE_APK_PLAN_KO.md)을 참고하세요.
+공개 배포 전에 할 일: OpenRouter 대시보드에서 키 사용 한도를 걸고, 필요하면 Duffel 토큰을 추가하고, `EASY_TRAVEL_ACCESS_CODE`를 설정한 뒤 Vercel 배포 보호를 끕니다. 부모님 기기에서는 ‘여행 설정 → AI 접속 코드’에 코드를 한 번 넣으면 됩니다. Capacitor Android debug APK 골격과 빌드 명령은 [네이티브 APK 계획](./docs/NATIVE_APK_PLAN_KO.md)을 참고하세요. 현재 debug APK는 `CAPACITOR_SERVER_URL`로 지정한 웹 서버를 사용하므로 운영 APK는 공개 운영 URL로 다시 빌드해야 합니다.
 
 ## 안전 기능의 한계
 

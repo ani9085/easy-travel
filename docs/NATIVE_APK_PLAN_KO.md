@@ -11,6 +11,18 @@
 - Android 알림: 가격 목표 도달, 가족 확인 요청 등 기기 알림
 - 외부 지도 앱: 목적지 길찾기는 Google Maps URL을 열어 처리
 
+## 현재 로컬 빌드 상태
+
+- Android Studio: 설치됨
+- Android SDK: 설치됨(API 36 계열, Build Tools 34.0.0 포함)
+- Android Studio 내장 JDK: 21.0.10
+- Capacitor: `@capacitor/core`, `@capacitor/android`, `@capacitor/cli` 설치 완료
+- Android 프로젝트: `android/` 생성 완료
+- Debug APK: 빌드 성공. `android/app/build/outputs/apk/debug/app-debug.apk`
+- 실기기/에뮬레이터: 현재 `adb devices`에 연결된 장치 없음
+
+현재 APK는 테스트용으로 `CAPACITOR_SERVER_URL`에 지정한 웹 서버를 WebView에서 엽니다. 이번 검증 APK는 에뮬레이터에서 호스트의 개발 서버를 보기 위해 `http://10.0.2.2:51234`를 사용했습니다. 부모님 배포용 APK는 Vercel Deployment Protection을 정리한 운영 URL로 다시 빌드해야 합니다.
+
 ## 현재와 APK의 경계
 
 ```text
@@ -49,11 +61,25 @@ OpenRouter와 Duffel 키는 APK 안에 넣지 않습니다. APK에 키를 넣으
 
 ### B. APK 골격
 
-- Android Studio와 Android SDK 설치
-- Capacitor Android 프로젝트 생성 및 HTTPS API 주소 설정
+- Android Studio와 Android SDK 설치 완료
+- Capacitor Android 프로젝트 생성 및 Gradle wrapper 빌드 완료
+- `CAPACITOR_SERVER_URL` 기반 WebView 주소 설정 완료
+- debug APK 생성 확인 완료
 - Android 권한 문구와 개인정보 처리방침 작성
 - WorkManager 네이티브 플러그인 또는 전용 Kotlin 브리지 추가
 - 실기기에서 백그라운드 실행·알림·저전력 모드 검증
+
+### Debug APK 빌드
+
+```powershell
+$env:CAPACITOR_SERVER_URL = "https://운영-주소"
+$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+npx cap sync android
+.\android\gradlew.bat -p android assembleDebug --no-daemon
+```
+
+생성 파일은 `android/app/build/outputs/apk/debug/app-debug.apk`다. `android/`의 Gradle·build 산출물과 Capacitor 동기화 assets는 `.gitignore` 정책을 따른다.
 
 ### C. 서버 공유
 

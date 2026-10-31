@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { PlanRecommendations } from "../../components/PlanRecommendations.tsx";
 import { LocalTime, useHashView, useHydrated, useTrip } from "../../components/hooks.tsx";
-import { ACCESS_CODE_STORAGE_KEY, formatWon, localEmergencyCall, mapsDirectionsUrl, mapsSearchUrl, openMapsUrl, readAccessCode } from "../../components/shared.ts";
+import { ACCESS_CODE_STORAGE_KEY, formatWon, localEmergencyCall, mapsDirectionsUrl, mapsSearchUrl, openMapsUrl, readAccessCode, shareOutcomeMessage, shareText } from "../../components/shared.ts";
+import { buildSharePayload, shareLink } from "../../lib/shareLink.ts";
 import { profileForDestination } from "../../lib/destinations.ts";
 import {
   BUDGET_STYLES,
@@ -65,6 +66,12 @@ function parseItinerary(text: string, existingNames: string[]) {
   return { candidates, skipped: Math.max(0, total - candidates.length) };
 }
 
+/** 공급자 시각(2026-11-06T08:30:00)을 "11/06 08:30"으로. 이미 짧은 형식이면 그대로. */
+function flightTime(value: string) {
+  const match = value.match(/^\d{4}-(\d{2})-(\d{2})T(\d{2}:\d{2})/);
+  return match ? `${match[1]}/${match[2]} ${match[3]}` : value;
+}
+
 function formatOfferPrice(offer: FlightOffer) {
   const price = effectiveFlightPrice(offer);
   if (offer.currency === "KRW") return formatWon(price);
@@ -112,6 +119,18 @@ export default function GuardianPage() {
   const events = [...trip.journal.events].reverse().slice(0, 8);
   const statusRecords = trip.itinerary.filter((item) => item.statusAt).sort((a, b) => (b.statusAt || "").localeCompare(a.statusAt || "")).slice(0, 8);
   const stage = !timeline ? "" : !dateCheck.ok ? "날짜 확인 필요" : timeline.stage === "before" ? `출발까지 ${timeline.daysUntil}일` : timeline.stage === "during" ? `여행 ${timeline.day}일째` : timeline.stage === "after" ? "귀국 후" : "날짜 미정";
+
+  /** 부모님 안드로이드 앱으로 여행 보내기: 링크의 # 뒤에 담아 카카오톡으로 공유합니다(서버 저장 없음). */
+  async function sendToParentsApp() {
+    if (!trip.profile.destination.trim()) {
+      setShareNotice("여행지를 먼저 넣어 주세요.");
+      return;
+    }
+    const link = shareLink(window.location.origin, buildSharePayload(trip, new Date().toISOString()));
+    const outcome = await shareText(`[이지트래블] ${trip.profile.destination} 여행을 보냈어요. 링크를 눌러 앱에서 열어 주세요.
+${link}`);
+    setShareNotice(outcome === "failed" ? `공유가 막혀 있어요. 이 링크를 복사해 보내 주세요: ${link}` : shareOutcomeMessage(outcome));
+  }
 
   function changeProfile(patch: Partial<TripProfile>) {
     const cleared = updateProfile(patch);
@@ -232,7 +251,7 @@ export default function GuardianPage() {
       <main className="main">
         <div className="topbar">
           <div><div className="eyebrow">Guardian · {MENU.find((item) => item.id === activeView)?.label}</div><h1>부모님 여행을<br />함께 준비해요.</h1><p className="lede">계획을 저장하고, 실제 조회 결과와 AI 초안을 확인한 뒤 가족이 함께 확정합니다.</p></div>
-          <div className="top-actions"><Link className="button" href="/traveler">부모님 화면 열기</Link><button type="button" className="button secondary" onClick={() => setShareNotice("가족 공유는 준비 중이에요. 지금은 이 기기에만 저장되고, 다른 가족 기기에서는 볼 수 없어요.")}>가족 공유 안내</button>{shareNotice && <div className="notice" role="status">{shareNotice}</div>}</div>
+          <div className="top-actions"><Link className="button" href="/traveler">부모님 화면 열기</Link><button type="button" className="button secondary" onClick={sendToParentsApp}>부모님 앱으로 보내기</button>{shareNotice && <div className="notice" role="status">{shareNotice}</div>}</div>
         </div>
 
         {activeView === "status" && <section id="status" className="grid hero-grid">
@@ -259,7 +278,7 @@ export default function GuardianPage() {
         {activeView === "flights" && <section id="flights" className="section">
           <div className="section-title"><div><div className="eyebrow">LIVE SEARCH</div><h2>항공 가격</h2><p>연결된 항공 공급자의 결과만 표시합니다. 키가 없으면 가짜 후보를 만들지 않아요.</p></div><span className="pill">실시간 공급자 연동 준비</span></div>
           <div className="card planning-form-card"><div className="form-row"><div className="field"><label htmlFor="flight-origin">출발 공항 코드</label><input id="flight-origin" className="input" maxLength={3} value={profile.originIata} onChange={(e) => changeProfile({ originIata: e.target.value.toUpperCase() })} placeholder="ICN" /></div><div className="field"><label htmlFor="flight-destination">도착 공항 코드</label><input id="flight-destination" className="input" maxLength={3} value={profile.destinationIata} onChange={(e) => changeProfile({ destinationIata: e.target.value.toUpperCase() })} placeholder="NRT" /></div></div><div className="button-row"><button type="button" className="button" onClick={searchFlights} disabled={flightSearchBusy}>{flightSearchBusy ? "조회 중…" : "실제 항공권 조회"}</button><span className="small">DUFFEL_ACCESS_TOKEN이 서버에 설정되어야 합니다. 예약은 외부 공식 사이트에서 직접 합니다.</span></div>{flightSearchNotice && <div className="notice" role="status">{flightSearchNotice}</div>}</div>
-          <div className="card planning-results"><div className="card-header"><div><h3>조회 결과</h3><p>1인 왕복 기준으로 받은 공급자 결과입니다.</p></div><span className="pill">{trip.flightOffers.length}개 결과</span></div>{stale && <div className="notice">출발지나 목적지가 바뀌었어요. 다시 조회해 주세요.</div>}{trip.flightOffers.length ? <div className="flight-grid">{trip.flightOffers.map((offer) => { const badge = offerBadge(offer, trip.flightOffers); const selected = trip.flightSelection?.offerId === offer.id; return <article className="flight-card" key={offer.id}><div className="flight-card-top"><strong>{offer.airlineNames.join(" · ")}</strong><span className={`flight-status ${badge.tone}`}>{badge.label}</span></div><div className="flight-route">{offer.originLabel} → {offer.destinationLabel}{offer.arrivalAirport ? ` (${offer.arrivalAirport})` : ""} · {offer.stops === 0 ? "직항" : `${offer.stops}회 경유`}</div>{offer.departLocal && <div className="flight-route">출발 {offer.departLocal} · 도착 {offer.arriveLocal || "정보 없음"}</div>}<div className="flight-meta"><span>조회 <LocalTime value={offer.fetchedAt} /></span><span>{offer.provider}</span></div><div className="flight-price">{formatOfferPrice(offer)}</div><button type="button" className={selected ? "button green" : "button secondary"} onClick={() => selectFlight(offer.id)}>{selected ? "선택됨" : "이 항공 선택"}</button></article>; })}</div> : <div className="empty">아직 실제 조회 결과가 없어요. DUFFEL_ACCESS_TOKEN 설정 후 조회해 주세요. 데모 가격은 표시하지 않습니다.</div>}</div>
+          <div className="card planning-results"><div className="card-header"><div><h3>조회 결과</h3><p>{profile.travelers}명 왕복 총액 · 공급자가 조회 시점에 준 결과입니다.</p></div><span className="pill">{trip.flightOffers.length}개 결과</span></div>{stale && <div className="notice">출발지나 목적지가 바뀌었어요. 다시 조회해 주세요.</div>}{trip.flightOffers.length ? <div className="flight-grid">{trip.flightOffers.map((offer) => { const badge = offerBadge(offer, trip.flightOffers); const selected = trip.flightSelection?.offerId === offer.id; return <article className="flight-card" key={offer.id}><div className="flight-card-top"><strong>{offer.airlineNames.join(" · ")}</strong><span className={`flight-status ${badge.tone}`}>{badge.label}</span></div><div className="flight-route">{offer.originLabel} → {offer.destinationLabel}{offer.arrivalAirport ? ` (${offer.arrivalAirport})` : ""} · {offer.stops === 0 ? "직항" : `${offer.stops}회 경유`}</div>{offer.departLocal && <div className="flight-route">출발 {flightTime(offer.departLocal)} · 도착 {offer.arriveLocal ? flightTime(offer.arriveLocal) : "정보 없음"} (현지 시각)</div>}<div className="flight-meta"><span>조회 <LocalTime value={offer.fetchedAt} /></span><span>{offer.provider}</span></div><div className="flight-price">{formatOfferPrice(offer)}</div><button type="button" className={selected ? "button green" : "button secondary"} onClick={() => selectFlight(offer.id)}>{selected ? "선택됨" : "이 항공 선택"}</button></article>; })}</div> : <div className="empty">아직 실제 조회 결과가 없어요. DUFFEL_ACCESS_TOKEN 설정 후 조회해 주세요. 데모 가격은 표시하지 않습니다.</div>}</div>
           <div className="card"><div className="card-header"><div><h3>예약 상태</h3><p>앱은 결제·예약을 대신하지 않습니다. 공식 예약을 마친 뒤에만 다음 단계로 넘어가세요.</p></div></div>{trip.flightSelection ? <div className="notice success">{trip.flightSelection.status === "booked" ? "외부 예약 완료로 기록됨" : "항공권을 선택함"}<div className="button-row"><button type="button" className="button" onClick={markBooked} disabled={trip.flightSelection.status === "booked"}>외부 예약 후 완료로 표시</button><button type="button" className="button secondary" onClick={() => go("recommendations")}>일정·숙소 추천으로 이동</button></div></div> : <div className="button-row"><button type="button" className="button secondary" onClick={markManualBooked}>실제 예약을 마쳤어요(수동 기록)</button><span className="small">조회 공급자가 없을 때도 외부에서 예약한 뒤에만 누르세요.</span></div>}</div>
         </section>}
 

@@ -53,6 +53,11 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/** 번역 결과를 감싼 <text>…</text>(입력 구분자를 모델이 따라 쓴 것)를 떼어 냅니다. */
+export function stripTextTags(value: string) {
+  return value.replace(/^\s*<text>\s*/i, "").replace(/\s*<\/text>\s*$/i, "").trim();
+}
+
 export function validateAiRequest(body: unknown): { ok: true; value: AiRequest } | ({ ok: false } & Rejection) {
   if (typeof body !== "object" || body === null || Array.isArray(body)) return { ok: false, status: 400, error: "요청 형식이 올바르지 않습니다.", code: "bad_request" };
   const data = body as Record<string, unknown>;

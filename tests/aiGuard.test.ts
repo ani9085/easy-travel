@@ -110,3 +110,12 @@ describe("요청 횟수 제한", () => {
     assert.equal(clientKey(headers({})), "unknown");
   });
 });
+
+describe("번역 결과 정리", () => {
+  it("모델이 따라 쓴 <text> 표시만 떼고 내용은 그대로 둔다", async () => {
+    const { stripTextTags } = await import("../lib/server/aiGuard.ts");
+    assert.equal(stripTextTags("<text>トイレはどこですか？</text>"), "トイレはどこですか？");
+    assert.equal(stripTextTags(" <TEXT> Merci </TEXT> "), "Merci");
+    assert.equal(stripTextTags("お手洗いはどこですか？"), "お手洗いはどこですか？");
+  });
+});

@@ -6,7 +6,7 @@
 
 easy-travel은 부모님·가족·친구가 여행을 함께 계획하고, 여행자는 여행 중 필요한 행동을 크게 확인하며, 동행자와 보호자는 동의된 일정과 상태를 참고할 수 있게 하는 여행 도우미입니다.
 
-현재 저장소에는 **여행 전 계획·여행 중 보조 MVP와 Capacitor Android debug APK 골격**이 있습니다. 초기 여행은 빈 초안으로 시작하며, 실항공 검색은 Duffel 토큰이 있을 때만 동작합니다. 예약·가족 서버 공유·푸시 알림·WorkManager 연결·운영용 APK 패키징은 후속 연결 대상입니다.
+현재 저장소에는 **보호자용 웹(계획·보조)과 부모님용 Kotlin 네이티브 안드로이드 앱**이 있습니다(2026-11-01 Claude가 Capacitor 껍데기를 네이티브로 교체 — `docs/NATIVE_APK_PLAN_KO.md`). 초기 여행은 빈 초안으로 시작하며, 실항공 검색은 Duffel 토큰이 있을 때만 동작합니다. 예약·가족 서버 공유·푸시 알림·WorkManager 연결·운영용 APK 패키징은 후속 연결 대상입니다.
 
 > **2026-10-31 갱신 (Claude Opus, 브랜치 `claude/p0-hardening`, main 병합 전)**
 > 전면 감사와 P0 안정화를 마쳤습니다. 이제 기준 문서는 `docs/`입니다. [AUDIT](./docs/AUDIT_KO.md) · [ARCHITECTURE](./docs/ARCHITECTURE_KO.md) · [PRODUCT_REQUIREMENTS](./docs/PRODUCT_REQUIREMENTS_KO.md) · [ROADMAP](./docs/ROADMAP_KO.md) · [TEST_PLAN](./docs/TEST_PLAN_KO.md) · [EXTERNAL_API_DECISIONS](./docs/EXTERNAL_API_DECISIONS_KO.md)

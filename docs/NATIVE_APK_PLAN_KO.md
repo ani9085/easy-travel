@@ -1,96 +1,67 @@
-# easy-travel 네이티브 APK 전환 계획
+# easy-travel 네이티브 안드로이드 앱
 
-기준일: 2026-10-31
+기준일: 2026-11-01
 
-## 결론
+## 결론 (변경)
 
-현재 Next.js 화면과 Vercel API는 유지하고, Android 앱은 Capacitor 기반 APK로 감쌉니다. 화면과 Trip 모델을 다시 만들지 않고 재사용하되, 다음 기능은 Android 네이티브 계층에서 담당합니다.
+Codex가 만든 Capacitor 프로젝트(웹 화면을 WebView로 여는 껍데기)는 사용자 요청에 따라 **Kotlin·Jetpack Compose 네이티브 앱으로 교체**했습니다.
 
-- Android WorkManager: 항공 가격을 하루 2회 확인하고 로컬 알림 표시
-- 위치 권한·GPS: 사용자가 누른 안부/SOS 때만 현재 위치를 읽음. 자동 추적은 별도 동의와 정책 검토 뒤에 추가
-- Android 알림: 가격 목표 도달, 가족 확인 요청 등 기기 알림
-- 외부 지도 앱: 목적지 길찾기는 Google Maps URL을 열어 처리
+- **부모님 앱(안드로이드, 네이티브)**: 일정·숙소 길찾기·긴급전화·자주 쓰는 말·환율·기록이 앱 안에 있어 해외에서 데이터가 끊겨도 열립니다. 서버는 AI(통역·사진)와 항공 가격 조회에만 씁니다.
+- **보호자 웹(Next.js/Vercel)**: 계획·AI 추천·항공 조회·비교는 지금처럼 웹에서 하고, **‘부모님 앱으로 보내기’ 링크**로 여행을 앱에 넣습니다.
+- 로그인 없음. 정식 주소의 Vercel 배포 보호는 2026-11-01에 껐습니다(미리보기 주소도 함께 공개됨). AI·항공 API는 같은 출처 확인·가족 접속 코드·요청 횟수 제한으로 보호합니다.
 
-## 현재 로컬 빌드 상태
-
-- Android Studio: 설치됨
-- Android SDK: 설치됨(API 36 계열, Build Tools 34.0.0 포함)
-- Android Studio 내장 JDK: 21.0.10
-- Capacitor: `@capacitor/core`, `@capacitor/android`, `@capacitor/cli` 설치 완료
-- Android 프로젝트: `android/` 생성 완료
-- Debug APK: 빌드 성공. `android/app/build/outputs/apk/debug/app-debug.apk`
-- 실기기/에뮬레이터: 현재 `adb devices`에 연결된 장치 없음
-
-현재 APK는 테스트용으로 `CAPACITOR_SERVER_URL`에 지정한 웹 서버를 WebView에서 엽니다. 이번 검증 APK는 에뮬레이터에서 호스트의 개발 서버를 보기 위해 `http://10.0.2.2:51234`를 사용했습니다. 부모님 배포용 APK는 Vercel Deployment Protection을 정리한 운영 URL로 다시 빌드해야 합니다.
-
-## 현재와 APK의 경계
+## 앱 구성 (`android/`)
 
 ```text
-Android APK (Capacitor)
-  ├─ 부모님/보호자 메뉴와 Trip local cache
-  ├─ GPS·알림·WorkManager 네이티브 플러그인
-  └─ HTTPS
-       └─ Next.js/Vercel API
-            ├─ /api/ai       → OpenRouter
-            └─ /api/flights/search → Duffel(서버 Secret)
+android/app/src/main/java/com/ani9085/easytravel/
+  data/Models.kt          Trip·일정·기록·가격 감시 모델 (웹 lib/trip.ts와 같은 뜻)
+  data/TripLogic.kt       날짜 검증, 목적지 시간대 기준 '오늘', 다음 일정, 기록
+  data/TripCodec.kt       저장 JSON, 보호자 웹 링크(payload) 해석
+  data/Destinations.kt    assets/destinations.json(웹 lib/destinations.ts에서 내보냄)
+  data/TripStore.kt       SharedPreferences 저장(이 휴대폰만)
+  net/Api.kt              /api/ai, /api/flights/search, Frankfurter 환율
+  util/Device.kt          구글 지도·전화·카톡 공유·읽어주기(TTS)·사진 축소·1회 위치
+  work/PriceWatchWorker   WorkManager 12시간 간격 가격 확인 → 목표가 이하 알림
+  ui/                     Compose 화면: 처음·일정·통역·돈 계산·여기 어디?·숙소 도착·도움·설정·가져오기
 ```
 
-OpenRouter와 Duffel 키는 APK 안에 넣지 않습니다. APK에 키를 넣으면 추출할 수 있으므로, 서버 환경변수에만 보관합니다. 부모님이 입력하는 AI 접속 코드는 키가 아니라 서버가 허용 여부를 확인하기 위한 보조 코드입니다.
+| 기능 | 앱에서 | 서버 필요 |
+|---|---|---|
+| 다음에 갈 곳 · 도착/다 봤어요/건너뛰기 · 되돌리기 | ✅ | 아니오 |
+| 숙소로 가기 · 장소 길찾기 | Google 지도 앱으로 | 아니오 |
+| 통역(한↔현지어) | ✅ 말로 넣기(휴대폰 음성 인식) · 읽어주기(기기 음성) · 크게 보기 · 자주 쓰는 말 | 번역만 |
+| 돈 계산 | ✅ 마지막 환율 저장 | 환율 새로 받을 때만 |
+| 여기 어디? | ✅ 카메라·갤러리 → 1280px·EXIF 제거 | AI 분석 |
+| 숙소 도착 알리기 · 도움 요청 · 안부 | ✅ 기록 + 카카오톡으로 바로 공유(없으면 공유 창) · 위치는 고를 때만 | 아니오 |
+| 긴급전화 | 전화 앱에 번호만 채움(통화는 사용자가 누름) | 아니오 |
+| 항공 가격 감시 | ✅ 하루 두 번쯤 확인 · 알림 | `DUFFEL_ACCESS_TOKEN` 필요 |
+| 보호자 웹 여행 가져오기 | ✅ 링크 탭 또는 붙여넣기 | 아니오(링크에 담김) |
 
-## 가격 감시
+## 보호자 웹 → 앱 링크
 
-여행 계획에서 목표 금액과 `08:00`, `20:00`을 저장합니다. 현재 웹 화면은 조건을 저장하는 단계이고, APK에서 다음 순서로 실제 동작하게 합니다.
+`lib/shareLink.ts`가 여행 요약(목적지·날짜·인원·숙소·긴급번호·호칭·공항 코드·일정 이름)을 base64url JSON으로 만들어 `https://<사이트>/send#<payload>`로 보냅니다. `#` 뒤라 서버로 전송·저장되지 않습니다. `/send` 화면의 ‘앱에서 열기’는 `intent://import?d=…;scheme=easytravel;package=com.ani9085.easytravel`로 앱을 엽니다. 기록·위치·항공 결과는 링크에 넣지 않습니다. 형식이 바뀌면 웹 테스트(`tests/shareLink.test.ts`)와 앱 테스트(`TripCodecTest`)가 같은 고정 payload로 함께 깨집니다.
 
-1. WorkManager가 배터리·네트워크 조건을 확인합니다.
-2. `/api/flights/search`를 호출합니다.
-3. 결과가 목표 금액 이하이면 로컬 알림을 표시합니다.
-4. 마지막 확인 시각과 결과를 Trip에 저장합니다.
-
-정확히 08:00/20:00에 실행된다고 보장하면 안 됩니다. Android 절전 정책에 따라 지연될 수 있고, 항공 가격·좌석도 조회 시점의 결과입니다. Vercel Hobby Cron을 이 기능의 기준으로 쓰지 않습니다. Hobby 플랜의 Cron 빈도 제한 때문에 하루 2회 보장이 되지 않으므로, APK의 WorkManager가 주 실행자가 되어야 합니다.
-
-## 단계
-
-### A. 지금 반영된 웹 단계
-
-- 새 여행은 빈 계획에서 시작
-- 부모님 화면에 `여행 계획 세우기` 메뉴 추가
-- 보호자 화면을 스크롤형 단일 화면이 아닌 메뉴별 화면으로 분리
-- Mock 항공·숙소 묶음을 기본 화면에서 제거
-- OpenRouter 구조화 일정·숙소 후보 추천 및 사용자 수정/확정 흐름 추가
-- Duffel 실제 항공 검색 API 어댑터 추가(토큰이 없으면 명확한 설정 오류)
-
-### B. APK 골격
-
-- Android Studio와 Android SDK 설치 완료
-- Capacitor Android 프로젝트 생성 및 Gradle wrapper 빌드 완료
-- `CAPACITOR_SERVER_URL` 기반 WebView 주소 설정 완료
-- debug APK 생성 확인 완료
-- Android 권한 문구와 개인정보 처리방침 작성
-- WorkManager 네이티브 플러그인 또는 전용 Kotlin 브리지 추가
-- 실기기에서 백그라운드 실행·알림·저전력 모드 검증
-
-### Debug APK 빌드
+## 빌드
 
 ```powershell
-$env:CAPACITOR_SERVER_URL = "https://운영-주소"
+npm run android:data      # 웹 → 앱 데이터(목적지, 테스트 payload) 내보내기
+cd android
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
-$env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
-npx cap sync android
-.\android\gradlew.bat -p android assembleDebug --no-daemon
+.\gradlew.bat testDebugUnitTest assembleDebug        # 디버그 APK
+.\gradlew.bat bundleRelease assembleRelease          # 플레이 콘솔용 AAB + 서명된 APK
 ```
 
-생성 파일은 `android/app/build/outputs/apk/debug/app-debug.apk`다. `android/`의 Gradle·build 산출물과 Capacitor 동기화 assets는 `.gitignore` 정책을 따른다.
+- `android/local.properties`(커밋하지 않음): `sdk.dir`, `API_BASE_URL`(기본 운영 주소), `FAMILY_ACCESS_CODE`(서버에 접속 코드를 설정한 경우).
+- `android/keystore.properties` + `android/easytravel-upload.jks`(커밋하지 않음): 업로드 키. **잃어버리면 플레이 콘솔에서 업로드 키 재설정을 요청해야 하므로 안전한 곳에 따로 백업**합니다.
+- 툴체인: AGP 8.5.2 · Kotlin 1.9.24 · Gradle 8.9 · Compose BOM 2024.06.00 · compileSdk/targetSdk 36 · minSdk 26 (진실판별기와 같은 조합).
 
-### C. 서버 공유
+## 배포 (가족만)
 
-현재 Trip은 `localStorage` 한 기기에만 있습니다. 부모님과 자녀가 서로 다른 휴대폰에서 같은 계획과 안부를 보려면 다음 단계에서 서버 DB·가족 권한·초대/철회·삭제 기능이 필요합니다. APK를 먼저 만든다고 이 권한 문제가 자동으로 해결되지는 않습니다.
+플레이 콘솔 → 앱 만들기(`com.ani9085.easytravel`) → **테스트 > 내부 테스트**에 `app-release.aab` 업로드 → 테스터(가족 Google 계정) 추가 → 참여 링크를 가족에게 보냄. 정식 공개 없이 가족만 플레이스토어로 설치·자동 업데이트됩니다. 개인정보처리방침 URL과 데이터 보안 양식(위치: 사용자가 고를 때 1회, 공유 글에만 포함 · 사진: AI 분석용 전송, 저장 안 함)이 필요합니다.
 
-## 배포 전 체크
+## 남은 일
 
-- Vercel Deployment Protection을 부모님이 접근할 수 있는 방식으로 조정
-- `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`은 Secret 환경변수
-- `DUFFEL_ACCESS_TOKEN`은 항공 공급자 Secret 환경변수
-- APK WebView를 허용할 때만 `EASY_TRAVEL_APP_ORIGINS=capacitor://localhost`를 추가하고, 다른 Origin은 넣지 않음
-- API 사용량·월 한도·실패 시 재시도 정책 설정
-- 실시간 가격·숙소 재고·AI 추천에 “참고용/예약 대체 아님” 표시 유지
-- 위치는 기본적으로 수집하지 않고, 사용자가 안부/SOS 화면에서 선택한 경우에만 요청
+- 실기기 검증(카톡 바로 공유, 음성 인식·읽어주기, 카메라, 위치 권한 거부, 가격 감시 알림, 절전 모드)
+- 플레이 콘솔 업로드·내부 테스트 구성, 개인정보처리방침 페이지
+- App Links(https 링크가 브라우저 없이 바로 앱으로) — 플레이 앱 서명 키 SHA-256을 `assetlinks.json`에 등록한 뒤
+- 서버 공유(가족 여러 기기 동기화)·카카오 로그인은 P2

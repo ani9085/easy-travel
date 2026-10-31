@@ -1,10 +1,12 @@
 # easy-travel
-부모님 여행 도우미 — 모바일 우선 웹앱 (Next.js · Vercel · OpenRouter)
+부모님 여행 도우미 — **부모님용 네이티브 안드로이드 앱(Kotlin)** + 보호자용 웹(Next.js · Vercel · OpenRouter)
 
 - [감사 보고서](./docs/AUDIT_KO.md) · [아키텍처](./docs/ARCHITECTURE_KO.md) · [제품 요구사항](./docs/PRODUCT_REQUIREMENTS_KO.md) · [로드맵](./docs/ROADMAP_KO.md) · [테스트 계획](./docs/TEST_PLAN_KO.md) · [외부 API 결정](./docs/EXTERNAL_API_DECISIONS_KO.md)
 - [검수 계약(리뷰 지시서)](./docs/EASY_TRAVEL_OPUS_MVP_REVIEW_SPEC_KO.md) · [제품 지도](./EASY_TRAVEL_PRODUCT_MAP_KO.md) · [Claude 작업 인수인계](./CLAUDE_HANDOFF_KO.md) · [전체 작업 로그](./WORK_LOG_KO.md)
 
-## 현재 작업 상태 (2026-10-31)
+## 현재 작업 상태 (2026-11-01)
+
+**네이티브 안드로이드 앱**: `android/`는 Kotlin·Compose 앱입니다(Codex의 Capacitor 껍데기를 교체). 일정·길찾기·통역(말로 넣기·읽어주기)·돈 계산·여기 어디?·숙소 도착 알리기(카톡)·도움·항공 가격 감시(WorkManager)가 앱 안에 있고, 보호자 웹의 ‘부모님 앱으로 보내기’ 링크로 여행을 받습니다. 빌드·배포는 [네이티브 앱 문서](./docs/NATIVE_APK_PLAN_KO.md)를 보세요. 정식 주소는 로그인 없이 공개됐습니다(Vercel 배포 보호 해제).
 
 **현재 main**: 첫 화면에서 역할을 고르면 **부모님 화면(`/traveler`)** 과 **보호자 화면(`/guardian`)** 으로 나뉩니다. 부모님도 여행지·기간·인원·취향을 직접 정할 수 있고, 보호자 화면은 현황·계획·항공 가격·일정/숙소 추천·확정 일정·설정을 메뉴별 화면으로 나눕니다. 새 여행은 빈 계획에서 시작하며, 저장소에 남은 이전 Mock 장소·항공 후보는 실제 계획으로 읽지 않습니다.
 
@@ -56,10 +58,9 @@ OPENROUTER_VISION_MODEL=...      # 사진 분석용(이미지 입력 지원 모�
 OPENROUTER_SITE_URL=https://easy-travel-dosl.vercel.app   # 비우면 요청 주소를 씀
 EASY_TRAVEL_ACCESS_CODE=...      # 설정하면 번역·사진·일정 AI에 이 코드가 필요. 가족에게만 알려 주세요
 DUFFEL_ACCESS_TOKEN=...          # 실제 항공 조회용 서버 Secret. 없으면 항공 후보를 표시하지 않음
-EASY_TRAVEL_APP_ORIGINS=capacitor://localhost  # APK WebView Origin을 허용할 때만 추가
 ```
 
-공개 배포 전에 할 일: OpenRouter 대시보드에서 키 사용 한도를 걸고, 필요하면 Duffel 토큰을 추가하고, `EASY_TRAVEL_ACCESS_CODE`를 설정한 뒤 Vercel 배포 보호를 끕니다. 부모님 기기에서는 ‘여행 설정 → AI 접속 코드’에 코드를 한 번 넣으면 됩니다. Capacitor Android debug APK 골격과 빌드 명령은 [네이티브 APK 계획](./docs/NATIVE_APK_PLAN_KO.md)을 참고하세요. 현재 debug APK는 `CAPACITOR_SERVER_URL`로 지정한 웹 서버를 사용하므로 운영 APK는 공개 운영 URL로 다시 빌드해야 합니다.
+공개 배포 전에 할 일: OpenRouter 대시보드에서 키 사용 한도를 걸고, 필요하면 Duffel 토큰을 추가하고, `EASY_TRAVEL_ACCESS_CODE`를 설정한 뒤 Vercel 배포 보호를 끕니다. 부모님 기기에서는 ‘여행 설정 → AI 접속 코드’에 코드를 한 번 넣으면 됩니다. 안드로이드 앱 빌드는 [네이티브 앱 문서](./docs/NATIVE_APK_PLAN_KO.md)를 참고하세요.
 
 ## 안전 기능의 한계
 

@@ -8,6 +8,7 @@ import {
   checkOrigin,
   clientKey,
   createRateLimiter,
+  stripTextTags,
   validateAiRequest,
   type AiRequest,
   type AiTask
@@ -132,7 +133,9 @@ export async function POST(request: Request) {
 
     if (!upstream.ok) return reject("AI 서비스가 잠시 응답하지 않아요. 직접 입력으로 계속할 수 있어요.", 502, "upstream_error");
     const data = (await upstream.json()) as { choices?: Array<{ message?: { content?: string } }> };
-    const result = data.choices?.[0]?.message?.content?.trim();
+    const raw = data.choices?.[0]?.message?.content?.trim();
+    // 일부 모델은 입력을 감싼 <text> 표시까지 따라 써서, 번역 결과에서는 떼어 냅니다.
+    const result = raw && aiRequest.task === "translate" ? stripTextTags(raw) : raw;
     if (!result) return reject("AI가 답을 주지 않았어요. 직접 입력으로 계속할 수 있어요.", 502, "empty_result");
     if (aiRequest.task === "trip_plan" && !parseTripPlanText(result)) return reject("AI 계획 결과 형식이 올바르지 않아요. 다시 시도해 주세요.", 502, "invalid_plan_result");
     return NextResponse.json({ result, mode: "openrouter" });

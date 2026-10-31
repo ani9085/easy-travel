@@ -1,7 +1,5 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Easy Travel</string>
-    <string name="title_activity_main">Easy Travel</string>
-    <string name="package_name">com.ani9085.easytravel</string>
-    <string name="custom_url_scheme">com.ani9085.easytravel</string>
+    <string name="app_name">이지트래블</string>
+    <string name="channel_price">항공 가격 알림</string>
 </resources>

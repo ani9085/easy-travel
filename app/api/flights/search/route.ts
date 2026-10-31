@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { accessCodeMatches, checkOrigin } from "../../../../lib/server/aiGuard.ts";
+import { accessCodeMatches, checkOrigin, clientKey, createRateLimiter } from "../../../../lib/server/aiGuard.ts";
 import type { FlightOffer } from "../../../../lib/trip.ts";
 
 export const runtime = "nodejs";
 export const maxDuration = 25;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+// 항공 조회는 공급자 검색 한도·초과 요금이 있어 사람(IP)당 10분에 10번, 인스턴스 전체 60번까지만 받습니다.
+const takeQuota = createRateLimiter({ windowMs: 10 * 60_000, maxPerClient: 10, maxTotal: 60 });
 
 function object(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value) ? value as Record<string, unknown> : null;
@@ -72,6 +74,9 @@ export async function POST(request: Request) {
   if (!codeOk) return reject("가족 접속 코드가 필요해요.", 401, "access_code_required");
   const originRejection = checkOrigin(request.headers, Boolean(expectedCode) && codeOk, allowedOrigins());
   if (originRejection) return reject(originRejection.error, originRejection.status, originRejection.code);
+
+  const quota = takeQuota(clientKey(request.headers), 1, Date.now());
+  if (!quota.ok) return NextResponse.json({ error: "항공 조회가 많아 잠시 쉬고 있어요. 조금 뒤에 다시 해 주세요.", code: "rate_limited", mode: "error" }, { status: 429, headers: { "Retry-After": String(quota.retryAfterSeconds) } });
 
   const token = process.env.DUFFEL_ACCESS_TOKEN;
   if (!token) return reject("실제 항공 조회를 쓰려면 서버에 DUFFEL_ACCESS_TOKEN을 설정해 주세요.", 503, "flight_provider_not_configured");

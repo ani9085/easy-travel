@@ -4,9 +4,9 @@
 
 ## 0. 한 줄 요약
 
-easy-travel은 부모님과 보호자가 여행을 함께 준비하고, 부모님은 여행 중 필요한 행동을 크게 확인하며, 가족은 일정과 상태를 참고할 수 있게 하는 여행 도우미입니다.
+easy-travel은 부모님·가족·친구가 여행을 함께 계획하고, 여행자는 여행 중 필요한 행동을 크게 확인하며, 동행자와 보호자는 동의된 일정과 상태를 참고할 수 있게 하는 여행 도우미입니다.
 
-현재 저장소에는 **여행 중 보조 MVP + 여행 전 계획 UI 데모**가 있습니다. 계획 화면은 동작하지만 항공권 실시간 검색, 예약, 가족 서버 공유, 푸시 알림은 아직 연결되지 않았습니다.
+현재 저장소에는 **여행 전 계획·여행 중 보조 MVP**가 있습니다. 초기 여행은 빈 초안으로 시작하며, 실항공 검색은 Duffel 토큰이 있을 때만 동작합니다. 예약·가족 서버 공유·푸시 알림·실제 APK 패키징은 후속 연결 대상입니다.
 
 > **2026-10-31 갱신 (Claude Opus, 브랜치 `claude/p0-hardening`, main 병합 전)**
 > 전면 감사와 P0 안정화를 마쳤습니다. 이제 기준 문서는 `docs/`입니다. [AUDIT](./docs/AUDIT_KO.md) · [ARCHITECTURE](./docs/ARCHITECTURE_KO.md) · [PRODUCT_REQUIREMENTS](./docs/PRODUCT_REQUIREMENTS_KO.md) · [ROADMAP](./docs/ROADMAP_KO.md) · [TEST_PLAN](./docs/TEST_PLAN_KO.md) · [EXTERNAL_API_DECISIONS](./docs/EXTERNAL_API_DECISIONS_KO.md)
@@ -141,7 +141,7 @@ Google Maps는 현재 URL 호출 방식이라 Google Maps API 키가 필요하�
 easy-travel을 이어서 작업해줘.
 
 1) 먼저 CLAUDE_HANDOFF_KO.md, WORK_LOG_KO.md, EASY_TRAVEL_PRODUCT_MAP_KO.md, RESEARCH_BRIEF_KO.md를 읽어.
-2) 현재 앱의 여행 전 계획 화면은 데모다. 실제 최저가·예약·푸시·가족 공유가 연결됐다고 표현하거나 구현한 것으로 간주하지 마.
+2) 현재 앱의 여행 전 계획은 빈 초안에서 시작한다. 실제 최저가·예약·푸시·가족 서버 공유가 연결됐다고 표현하지 말고, 실데이터와 목업을 반드시 구분해.
 3) 이번 작업은 항공 검색을 바로 스크래핑하지 말고, 공식 공급자 API를 붙일 수 있는 Adapter/API 계약과 로딩·실패·조회시각 상태를 설계하는 것부터 시작해.
 4) API 키는 서버 환경변수에서만 읽고 GitHub와 브라우저에 노출하지 마.
 5) 계획·항공 결과·AI 결과는 사용자가 확인하기 전 자동 확정하지 마.
@@ -151,7 +151,7 @@ easy-travel을 이어서 작업해줘.
 
 ## 9. Codex 최신 반영 상태 (2026-10-31)
 
-현재 `main`의 최신 커밋은 `e4396dc feat: replace planning mocks with real workflow`입니다.
+현재 `main`의 최신 커밋은 `e631cfc docs: record current planning and native app state`이며, 핵심 구현 커밋은 `e4396dc feat: replace planning mocks with real workflow`입니다.
 
 - 초기 여행은 빈 초안입니다. 기존 레거시 도쿄·에펠탑 목업은 저장소 로딩 시 제거합니다.
 - 보호자와 부모님 모두 여행 계획을 입력할 수 있습니다.
@@ -163,3 +163,14 @@ easy-travel을 이어서 작업해줘.
 - GitHub push는 완료했습니다. Vercel 공개 URL은 Vercel 로그인 화면으로 보호되어 있으므로 Deployment Protection 설정을 확인해야 합니다.
 
 다음 작업자는 먼저 `docs/NATIVE_APK_PLAN_KO.md`를 읽고 Android Studio/SDK 설치 후 Capacitor Android 프로젝트와 WorkManager 브리지를 추가하세요. API 키는 계속 서버 환경변수에만 두고, 실제 항공·AI 결과가 없을 때 목업으로 대체하지 마세요.
+
+## 10. 공동여행 벤치마킹 반영 (2026-10-31)
+
+`docs/BENCHMARK_TRAVEL_SERVICES_KO.md`를 새 기준 문서로 추가했습니다.
+
+- easy-travel의 대상은 부모님·자녀뿐 아니라 친구·커플·다세대 동행자까지 포함합니다.
+- 여행 단위에 소유자, 공동 계획자, 여행자, 보호자/관찰자, 보기 전용 초대자 권한을 둡니다.
+- 여행 시작은 목적지·날짜 입력, 목적지 탐색, 항공권·계획서 가져오기 세 경로를 지원하는 방향입니다.
+- 후보 제안·댓글·투표·확정과 예약정보 확인을 분리하고, AI 결과는 사용자 확정 전 일정에 반영하지 않습니다.
+- 가족·친구 협업을 위해 현재 localStorage 구조를 서버 Trip 저장소와 초대·권한 모델로 확장해야 합니다.
+- 벤치마킹 자료는 Google Flights, Skyscanner, Hopper, TripIt, Wanderlog, Google Maps/Translate, Life360 공식 문서를 바탕으로 정리했습니다.

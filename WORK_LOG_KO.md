@@ -154,3 +154,11 @@ Claude의 첫 작업은 CLAUDE_HANDOFF_KO.md의 우선순위 1순위부터 읽�
 - 네이티브 앱 계획은 `docs/NATIVE_APK_PLAN_KO.md`에 기록했습니다. 현재 환경에는 Android SDK/ADB/Gradle이 없어 APK 바이너리는 아직 생성하지 않았습니다.
 - 검증: `npm run check` 통과(타입검사·lint·테스트 61개·build), 로컬 메뉴 전환 및 빈 초안/실제 항공 설정 오류/AI 키 미설정 상태를 브라우저에서 확인했습니다.
 - 배포 확인: GitHub `main` push는 완료했으나 Vercel 공개 주소가 현재 Vercel 로그인 화면으로 보호되어 부모님 기기에서 바로 접근 가능한 상태인지는 확인하지 못했습니다. Deployment Protection 설정을 확인해야 합니다.
+
+## 12. 공동여행 벤치마킹 반영 (2026-10-31, Codex)
+
+- `docs/BENCHMARK_TRAVEL_SERVICES_KO.md`를 추가했습니다.
+- Google Flights·Skyscanner·Hopper에서 유연한 날짜·Everywhere·가격 감시 흐름을, TripIt·Wanderlog에서 예약 통합·공동 편집·지도·예산 흐름을 참고했습니다.
+- Google Maps·Translate/Lens·Life360에서 오프라인 여행팩·카메라 번역·동의 기반 위치 공유·체크인·SOS 흐름을 참고했습니다.
+- 제품 대상을 부모님/자녀 중심에서 가족·친구·커플·다세대 공동여행으로 확장하고, 여행 소유자·공동 계획자·여행자·보호자·보기 전용 권한을 정의했습니다.
+- 다음 공동여행 구현의 우선순위는 초대·권한 → 후보 제안·투표·확정 → 서버 Trip 저장소 → 변경 알림·비용 정산입니다.

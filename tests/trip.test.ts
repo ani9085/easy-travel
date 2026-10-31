@@ -4,6 +4,7 @@ import { OTHER_DESTINATION, profileForDestination } from "../lib/destinations.ts
 import {
   DEFAULT_PROFILE,
   DEMO_HOTEL,
+  DEMO_ITINERARY,
   applyProfilePatch,
   buildDemoFlightOffers,
   buildPlanningSummary,
@@ -75,7 +76,7 @@ describe("여행 날짜 검증 (T02)", () => {
 
 describe("목적지 변경 (T01)", () => {
   it("목적지를 바꾸면 이전 데모 장소·데모 숙소가 남지 않는다", () => {
-    const trip = createDefaultTrip(NOW);
+    const trip = { ...createDefaultTrip(NOW), profile: { ...DEFAULT_PROFILE, hotel: DEMO_HOTEL }, itinerary: DEMO_ITINERARY.map((item) => ({ ...item })) };
     const withUserPlace = { ...trip, itinerary: [...trip.itinerary, { id: "u1", day: 2, name: "가족이 넣은 곳", note: "", status: "planned" as const, statusAt: null, source: "user" as const }] };
     const { trip: next, clearedDemo } = applyProfilePatch(withUserPlace, { destination: "오사카, 일본" }, NOW);
     assert.equal(clearedDemo, true);
@@ -83,12 +84,13 @@ describe("목적지 변경 (T01)", () => {
     assert.equal(next.profile.hotel, "");
   });
 
-  it("목적지가 그대로면 데모 값을 지우지 않는다", () => {
+  it("새 여행은 가짜 일정·숙소·항공 후보 없이 시작한다", () => {
     const trip = createDefaultTrip(NOW);
     const { trip: next, clearedDemo } = applyProfilePatch(trip, { travelers: 3 }, NOW);
     assert.equal(clearedDemo, false);
-    assert.equal(next.itinerary.length, 4);
-    assert.equal(next.profile.hotel, DEMO_HOTEL);
+    assert.equal(next.itinerary.length, 0);
+    assert.equal(next.flightOffers.length, 0);
+    assert.equal(next.profile.hotel, "");
   });
 
   it("사용자가 넣은 숙소는 목적지를 바꿔도 지우지 않는다", () => {
@@ -159,7 +161,7 @@ describe("오늘 계산은 목적지 시간대 기준 (T18)", () => {
   });
 
   it("여행 중에는 오늘 Day의 장소를 다음 일정으로 고른다", () => {
-    const items = createDefaultTrip(NOW).itinerary;
+    const items = DEMO_ITINERARY.map((item) => ({ ...item }));
     assert.equal(nextItineraryItem(items, { stage: "during", day: 2, totalDays: 5 })?.name, "센소지");
     assert.equal(nextItineraryItem(items, { stage: "before", daysUntil: 3 })?.name, "신주쿠 교엔");
     const done = items.map((item) => (item.day === 1 ? { ...item, status: "completed" as const } : item));
@@ -170,6 +172,7 @@ describe("오늘 계산은 목적지 시간대 기준 (T18)", () => {
 describe("여행 중 기록 (EX-05·EX-06)", () => {
   it("부모님이 누른 상태와 시각만 기록하고 다른 장소는 건드리지 않는다", () => {
     const trip = createDefaultTrip(NOW);
+    trip.itinerary = DEMO_ITINERARY.map((item) => ({ ...item }));
     const next = setItineraryStatus(trip, "demo-2", "arrived", "2026-11-07T01:00:00.000Z");
     assert.equal(next.itinerary.find((item) => item.id === "demo-2")?.status, "arrived");
     assert.equal(next.itinerary.find((item) => item.id === "demo-2")?.statusAt, "2026-11-07T01:00:00.000Z");

@@ -22,6 +22,9 @@ export const ASSUMED_TRIP_DAYS = 3;
 export type TripProfile = {
   destination: string;
   departure: string;
+  /** 실제 항공 조회에 쓸 IATA 3글자 코드. 목적지 텍스트를 자동 지오코딩하지 않습니다. */
+  originIata: string;
+  destinationIata: string;
   /** YYYY-MM-DD, 목적지 현지 날짜 */
   startDate: string;
   endDate: string;
@@ -58,7 +61,7 @@ export type FlightOffer = {
   stops: number;
   /** 1인 왕복, KRW */
   totalPrice: number;
-  currency: "KRW";
+  currency: string;
   arrivalAirport?: string;
   departLocal?: string;
   arriveLocal?: string;
@@ -79,7 +82,21 @@ export type JournalEvent = {
   shareOpened: boolean;
 };
 
-export type PriceWatch = { mode: "off" | "demo"; updatedAt: string | null };
+export type PriceWatch = {
+  mode: "off" | "configured";
+  targetPrice: number | null;
+  checkTimes: string[];
+  checksPerDay: 2;
+  lastCheckedAt: string | null;
+  nextCheckAt: string | null;
+  updatedAt: string | null;
+};
+
+export type FlightSelection = {
+  offerId: string;
+  status: "selected" | "booked";
+  updatedAt: string;
+};
 
 export type Trip = {
   schemaVersion: 1;
@@ -89,6 +106,7 @@ export type Trip = {
   itinerary: ItineraryItem[];
   flightOffers: FlightOffer[];
   priceWatch: PriceWatch;
+  flightSelection: FlightSelection | null;
   journal: { lastCheckinAt: string | null; events: JournalEvent[] };
   createdAt: string;
   updatedAt: string;
@@ -113,6 +131,8 @@ export const LEGACY_DEMO_NAMES = ["에펠탑", "루브르 박물관", "몽마르
 export const DEFAULT_PROFILE: TripProfile = {
   destination: DEMO_DESTINATION,
   departure: "인천국제공항 (ICN)",
+  originIata: "ICN",
+  destinationIata: "NRT",
   startDate: "2026-11-06",
   endDate: "2026-11-10",
   flexibleDates: false,
@@ -124,15 +144,45 @@ export const DEFAULT_PROFILE: TripProfile = {
   travelerName: ""
 };
 
-export function createDefaultTrip(now: string = DEMO_FETCHED_AT): Trip {
+/** 새 설치에서 보여 줄 빈 여행. 저장된 가짜 일정·가격을 사실처럼 보이지 않게 합니다. */
+export const EMPTY_PROFILE: TripProfile = {
+  destination: "",
+  departure: "",
+  originIata: "",
+  destinationIata: "",
+  startDate: "",
+  endDate: "",
+  flexibleDates: false,
+  travelers: 1,
+  budget: "균형형",
+  preference: "느긋한 일정",
+  hotel: "",
+  emergencyNumber: "",
+  travelerName: ""
+};
+
+export function emptyPriceWatch(): PriceWatch {
+  return {
+    mode: "off",
+    targetPrice: null,
+    checkTimes: ["08:00", "20:00"],
+    checksPerDay: 2,
+    lastCheckedAt: null,
+    nextCheckAt: null,
+    updatedAt: null
+  };
+}
+
+export function createDefaultTrip(now: string = new Date().toISOString()): Trip {
   return {
     schemaVersion: 1,
     id: "local-trip",
-    state: "planned",
-    profile: { ...DEFAULT_PROFILE },
-    itinerary: DEMO_ITINERARY.map((item) => ({ ...item })),
-    flightOffers: buildDemoFlightOffers(DEFAULT_PROFILE, DEMO_FETCHED_AT),
-    priceWatch: { mode: "off", updatedAt: null },
+    state: "draft",
+    profile: { ...EMPTY_PROFILE },
+    itinerary: [],
+    flightOffers: [],
+    priceWatch: emptyPriceWatch(),
+    flightSelection: null,
     journal: { lastCheckinAt: null, events: [] },
     createdAt: now,
     updatedAt: now
@@ -326,9 +376,9 @@ export function offerBadge(offer: FlightOffer, offers: FlightOffer[]): OfferBadg
 /** 저장된 후보가 지금 입력한 출발지·목적지와 다르면 다시 조회해야 합니다. */
 export function offersAreStale(offers: FlightOffer[], profile: TripProfile) {
   if (!offers.length) return false;
-  const origin = profile.departure.trim() || "출발 지역";
-  const destination = profile.destination.trim() || "여행지";
-  return offers.some((offer) => offer.originLabel !== origin || offer.destinationLabel !== destination);
+  const originLabels = [profile.originIata.trim().toUpperCase(), profile.departure.trim()].filter(Boolean);
+  const destinationLabels = [profile.destinationIata.trim().toUpperCase(), profile.destination.trim()].filter(Boolean);
+  return offers.some((offer) => !originLabels.includes(offer.originLabel) || !destinationLabels.includes(offer.destinationLabel));
 }
 
 // --- 여행 중 기록 ---------------------------------------------------------------

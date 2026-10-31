@@ -7,15 +7,18 @@
 
 import {
   BUDGET_STYLES,
+  DEFAULT_PROFILE,
   LEGACY_DEMO_NAMES,
   MAX_JOURNAL_EVENTS,
   MAX_TRIP_DAYS,
   TRAVEL_PREFERENCES,
   clampTravelers,
   createDefaultTrip,
+  emptyPriceWatch,
   type BudgetStyle,
   type DataSource,
   type FlightOffer,
+  type FlightSelection,
   type ItineraryItem,
   type ItineraryStatus,
   type JournalEvent,
@@ -67,6 +70,8 @@ function coerceProfile(value: unknown, base: TripProfile): TripProfile {
   return {
     destination: text(data.destination, base.destination, 120),
     departure: text(data.departure, base.departure, 120),
+    originIata: text(data.originIata, base.originIata, 3).toUpperCase(),
+    destinationIata: text(data.destinationIata, base.destinationIata, 3).toUpperCase(),
     startDate: text(data.startDate, base.startDate, 10),
     endDate: text(data.endDate, base.endDate, 10),
     flexibleDates: typeof data.flexibleDates === "boolean" ? data.flexibleDates : base.flexibleDates,
@@ -112,10 +117,10 @@ function coerceOffers(value: unknown): FlightOffer[] {
       airlineNames: Array.isArray(offer.airlineNames) ? offer.airlineNames.filter((name): name is string => typeof name === "string").slice(0, 4) : [],
       stops: typeof offer.stops === "number" ? Math.max(0, Math.round(offer.stops)) : 0,
       totalPrice: offer.totalPrice,
-      currency: "KRW",
+      currency: typeof offer.currency === "string" ? offer.currency.slice(0, 3).toUpperCase() : "KRW",
       arrivalAirport: typeof offer.arrivalAirport === "string" ? offer.arrivalAirport.slice(0, 8) : undefined,
-      departLocal: typeof offer.departLocal === "string" ? offer.departLocal.slice(0, 5) : undefined,
-      arriveLocal: typeof offer.arriveLocal === "string" ? offer.arriveLocal.slice(0, 5) : undefined,
+      departLocal: typeof offer.departLocal === "string" ? offer.departLocal.slice(0, 40) : undefined,
+      arriveLocal: typeof offer.arriveLocal === "string" ? offer.arriveLocal.slice(0, 40) : undefined,
       durationMinutes: typeof offer.durationMinutes === "number" ? Math.max(0, Math.round(offer.durationMinutes)) : undefined,
       baggageIncluded: typeof offer.baggageIncluded === "boolean" ? offer.baggageIncluded : undefined,
       baggageFeeKrw: typeof offer.baggageFeeKrw === "number" ? Math.max(0, offer.baggageFeeKrw) : undefined
@@ -145,15 +150,48 @@ export function parseStoredTrip(value: unknown, now: string): Trip | null {
   if (!isObject(value) || value.schemaVersion !== 1) return null;
   const base = createDefaultTrip(now);
   const priceWatch = isObject(value.priceWatch) ? value.priceWatch : {};
+  const selection = isObject(value.flightSelection) ? value.flightSelection : null;
   const journal = isObject(value.journal) ? value.journal : {};
+  const storedItinerary = coerceItinerary(value.itinerary, "user");
+  const storedOffers = coerceOffers(value.flightOffers);
+  const parsedProfile = coerceProfile(value.profile, base.profile);
+  const isSeedProfile = parsedProfile.destination === DEFAULT_PROFILE.destination
+    && parsedProfile.departure === DEFAULT_PROFILE.departure
+    && parsedProfile.startDate === DEFAULT_PROFILE.startDate
+    && parsedProfile.endDate === DEFAULT_PROFILE.endDate
+    && parsedProfile.flexibleDates === DEFAULT_PROFILE.flexibleDates
+    && parsedProfile.travelers === DEFAULT_PROFILE.travelers
+    && parsedProfile.budget === DEFAULT_PROFILE.budget
+    && parsedProfile.preference === DEFAULT_PROFILE.preference
+    && parsedProfile.hotel === DEFAULT_PROFILE.hotel
+    && !storedItinerary.some((item) => item.source === "user" || item.source === "import")
+    && !storedOffers.some((offer) => offer.dataMode === "live");
+  const storedPriceWatch = emptyPriceWatch();
+  const checkTimes = Array.isArray(priceWatch.checkTimes)
+    ? priceWatch.checkTimes.filter((time): time is string => typeof time === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(time)).slice(0, 2)
+    : storedPriceWatch.checkTimes;
+  const normalizedCheckTimes = checkTimes.length === 2 ? checkTimes : [...checkTimes, ...storedPriceWatch.checkTimes].slice(0, 2);
+  const normalizedSelection: FlightSelection | null = selection && typeof selection.offerId === "string" && (selection.status === "selected" || selection.status === "booked") && isoOrNull(selection.updatedAt)
+    ? { offerId: selection.offerId.slice(0, 80), status: selection.status, updatedAt: selection.updatedAt as string }
+    : null;
   return {
     schemaVersion: 1,
     id: text(value.id, base.id, 80),
-    state: oneOf<TripState>(value.state, TRIP_STATES, base.state),
-    profile: coerceProfile(value.profile, base.profile),
-    itinerary: coerceItinerary(value.itinerary, "user"),
-    flightOffers: coerceOffers(value.flightOffers),
-    priceWatch: { mode: priceWatch.mode === "demo" ? "demo" : "off", updatedAt: isoOrNull(priceWatch.updatedAt) },
+    state: isSeedProfile ? "draft" : oneOf<TripState>(value.state, TRIP_STATES, base.state),
+    profile: isSeedProfile ? base.profile : parsedProfile,
+    // 이전 버전의 데모 장소·모의 항공 후보는 실제 계획으로 승격하지 않습니다.
+    itinerary: storedItinerary.filter((item) => item.source !== "demo"),
+    flightOffers: storedOffers.filter((offer) => offer.dataMode === "live"),
+    priceWatch: {
+      mode: priceWatch.mode === "configured" ? "configured" : "off",
+      targetPrice: typeof priceWatch.targetPrice === "number" && Number.isFinite(priceWatch.targetPrice) && priceWatch.targetPrice > 0 ? Math.round(priceWatch.targetPrice) : null,
+      checkTimes: normalizedCheckTimes,
+      checksPerDay: 2,
+      lastCheckedAt: isoOrNull(priceWatch.lastCheckedAt),
+      nextCheckAt: isoOrNull(priceWatch.nextCheckAt),
+      updatedAt: isoOrNull(priceWatch.updatedAt)
+    },
+    flightSelection: normalizedSelection,
     journal: { lastCheckinAt: isoOrNull(journal.lastCheckinAt), events: coerceEvents(journal.events) },
     createdAt: isoOrNull(value.createdAt) || now,
     updatedAt: isoOrNull(value.updatedAt) || now
@@ -173,7 +211,7 @@ export function migrateLegacy(demo: unknown, planning: unknown, now: string): Tr
   const profile = coerceProfile({ ...form, destination: demoData.destination ?? form.destination, hotel: demoData.hotel, emergencyNumber: demoData.emergencyNumber }, base.profile);
   // 예전 저장소에는 파리 데모 값만 있었으므로, 저장된 장소가 없으면 빈 일정으로 시작합니다.
   const itinerary = isObject(demo) && Array.isArray(demoData.places)
-    ? coerceItinerary(demoData.places, "user").map((item) => ({ ...item, source: DEMO_NAMES.has(item.name) ? ("demo" as const) : item.source }))
+    ? coerceItinerary(demoData.places, "user").filter((item) => !DEMO_NAMES.has(item.name))
     : [];
   return {
     ...base,
@@ -181,7 +219,8 @@ export function migrateLegacy(demo: unknown, planning: unknown, now: string): Tr
     itinerary,
     // 예전 항공 후보는 가격이 문자열인 데모라 옮기지 않고 비워 둡니다(다시 조회하면 새로 만듭니다).
     flightOffers: [],
-    priceWatch: { mode: planningData.priceMonitoring === true ? "demo" : "off", updatedAt: isoOrNull(planningData.savedAt) },
+    priceWatch: emptyPriceWatch(),
+    flightSelection: null,
     journal: { lastCheckinAt: isoOrNull(demoData.lastCheckin), events: [] }
   };
 }

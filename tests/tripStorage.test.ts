@@ -18,10 +18,12 @@ function memoryStore(initial: Record<string, string> = {}) {
 }
 
 describe("여행 저장소", () => {
-  it("아무것도 없으면 기본 데모 여행", () => {
+  it("아무것도 없으면 빈 여행 계획", () => {
     const { trip, source } = loadTrip(memoryStore(), NOW);
     assert.equal(source, "default");
-    assert.equal(trip.profile.destination, "도쿄, 일본");
+    assert.equal(trip.profile.destination, "");
+    assert.equal(trip.itinerary.length, 0);
+    assert.equal(trip.flightOffers.length, 0);
   });
 
   it("저장한 여행을 그대로 다시 읽는다", () => {
@@ -40,7 +42,7 @@ describe("여행 저장소", () => {
   it("모양이 이상한 필드는 기본값·안전한 값으로 바꾼다", () => {
     const raw = JSON.stringify({ schemaVersion: 1, profile: { destination: 42, travelers: 99, budget: "사치형" }, itinerary: [{ name: "", day: 3 }, { name: "센소지", day: 99, status: "teleported" }] });
     const { trip } = loadTrip(memoryStore({ [TRIP_STORAGE_KEY]: raw }), NOW);
-    assert.equal(trip.profile.destination, "도쿄, 일본");
+    assert.equal(trip.profile.destination, "");
     assert.equal(trip.profile.travelers, 12);
     assert.equal(trip.profile.budget, "균형형");
     assert.deepEqual(trip.itinerary.map((item) => [item.name, item.day, item.status]), [["센소지", 30, "planned"]]);
@@ -71,9 +73,9 @@ describe("여행 저장소", () => {
     assert.equal(trip.profile.hotel, "신주쿠 호텔");
     assert.equal(trip.profile.emergencyNumber, "110");
     assert.equal(trip.journal.lastCheckinAt, "2026-10-30T10:00:00.000Z");
-    assert.equal(trip.priceWatch.mode, "demo");
+    assert.equal(trip.priceWatch.mode, "off");
     assert.deepEqual(trip.flightOffers, []);
-    assert.deepEqual(trip.itinerary.map((item) => [item.name, item.source]), [["에펠탑", "demo"], ["센소지", "user"]]);
+    assert.deepEqual(trip.itinerary.map((item) => [item.name, item.source]), [["센소지", "user"]]);
     assert.equal(store.data.get(LEGACY_DEMO_KEY), legacyDemo);
     assert.equal(store.data.get(LEGACY_PLANNING_KEY), legacyPlanning);
     assert.ok(store.data.has(TRIP_STORAGE_KEY));

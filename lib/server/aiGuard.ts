@@ -7,29 +7,50 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import { languageOption } from "../destinations.ts";
 
-export type AiTask = "translate" | "photo_location";
+export type AiTask = "translate" | "photo_location" | "trip_plan";
 
 export type TranslateDirection = "to_local" | "to_korean";
 
 export type AiRequest =
   | { task: "translate"; text: string; destination: string; direction: TranslateDirection; language: string | null }
-  | { task: "photo_location"; image: string; destination: string };
+  | { task: "photo_location"; image: string; destination: string }
+  | {
+      task: "trip_plan";
+      profile: {
+        destination: string;
+        departure: string;
+        originIata: string;
+        destinationIata: string;
+        startDate: string;
+        endDate: string;
+        flexibleDates: boolean;
+        travelers: number;
+        budget: string;
+        preference: string;
+      };
+      flightBooked: boolean;
+    };
 
 export const MAX_BODY_BYTES = 4_500_000;
 /** base64 data URL 기준, 원본 약 3MB. 클라이언트(page.tsx)와 같은 값입니다. */
 export const MAX_IMAGE_CHARS = 4_000_000;
 export const MAX_TRANSLATE_CHARS = 1000;
 export const MAX_DESTINATION_CHARS = 120;
+export const MAX_PROFILE_FIELD_CHARS = 120;
 const IMAGE_DATA_URL = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
 
 /** 작업마다 비용이 달라 횟수 제한에 다른 무게를 줍니다. */
-export const TASK_COST: Record<AiTask, number> = { translate: 1, photo_location: 4 };
+export const TASK_COST: Record<AiTask, number> = { translate: 1, photo_location: 4, trip_plan: 5 };
 
 export type Rejection = { status: number; error: string; code: string };
 
 // 제어 문자(줄바꿈·탭 제외)는 프롬프트에 넣지 않습니다.
 function stripControl(value: string) {
   return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "");
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export function validateAiRequest(body: unknown): { ok: true; value: AiRequest } | ({ ok: false } & Rejection) {
@@ -50,6 +71,33 @@ export function validateAiRequest(body: unknown): { ok: true; value: AiRequest }
     if (!IMAGE_DATA_URL.test(data.image)) return { ok: false, status: 400, error: "JPEG·PNG·WEBP 사진만 분석할 수 있어요.", code: "bad_image" };
     return { ok: true, value: { task: "photo_location", image: data.image, destination } };
   }
+  if (data.task === "trip_plan") {
+    if (!isObject(data.profile)) return { ok: false, status: 400, error: "여행 계획 정보가 없어요.", code: "missing_profile" };
+    const profile = data.profile;
+    const field = (key: string) => typeof profile[key] === "string" ? stripControl(profile[key] as string).trim().slice(0, MAX_PROFILE_FIELD_CHARS) : "";
+    const destinationName = field("destination");
+    if (!destinationName) return { ok: false, status: 400, error: "여행지를 먼저 넣어 주세요.", code: "missing_destination" };
+    const travelers = typeof profile.travelers === "number" && Number.isFinite(profile.travelers) ? Math.min(12, Math.max(1, Math.round(profile.travelers))) : 1;
+    return {
+      ok: true,
+      value: {
+        task: "trip_plan",
+        profile: {
+          destination: destinationName,
+          departure: field("departure"),
+          originIata: field("originIata").toUpperCase().slice(0, 3),
+          destinationIata: field("destinationIata").toUpperCase().slice(0, 3),
+          startDate: field("startDate").slice(0, 10),
+          endDate: field("endDate").slice(0, 10),
+          flexibleDates: profile.flexibleDates === true,
+          travelers,
+          budget: field("budget").slice(0, 40),
+          preference: field("preference").slice(0, 60)
+        },
+        flightBooked: data.flightBooked === true
+      }
+    };
+  }
   return { ok: false, status: 400, error: "지원하지 않는 AI 작업입니다.", code: "unknown_task" };
 }
 
@@ -62,10 +110,11 @@ function requestHost(headers: Headers) {
  * 브라우저는 POST에 Origin을 붙입니다. 다른 사이트에서 온 요청은 막고,
  * Origin이 없는 요청(스크립트·curl)은 접속 코드가 맞을 때만 허용합니다.
  */
-export function checkOrigin(headers: Headers, hasValidAccessCode: boolean): Rejection | null {
+export function checkOrigin(headers: Headers, hasValidAccessCode: boolean, allowedOrigins: readonly string[] = []): Rejection | null {
   const origin = headers.get("origin");
   const host = requestHost(headers);
   if (origin) {
+    if (allowedOrigins.includes(origin.trim())) return null;
     let originHost = "";
     try {
       originHost = new URL(origin).host.toLowerCase();

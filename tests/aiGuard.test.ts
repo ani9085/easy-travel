@@ -41,6 +41,16 @@ describe("AI 요청 검증 (T15)", () => {
     assert.equal(validateAiRequest({ task: "photo_location", image: "data:image/svg+xml;base64,AAAA" }).ok, false);
     assert.equal(validateAiRequest({ task: "photo_location", image: "https://example.com/a.jpg" }).ok, false);
   });
+
+  it("일정 추천은 여행지를 요구하고 구조화된 프로필만 통과시킨다", () => {
+    assert.equal(validateAiRequest({ task: "trip_plan", profile: {} }).ok, false);
+    const result = validateAiRequest({ task: "trip_plan", profile: { destination: "도쿄", travelers: 99, startDate: "2026-11-01", endDate: "2026-11-03", flexibleDates: false, budget: "균형형", preference: "느긋한 일정" }, flightBooked: true });
+    assert.ok(result.ok && result.value.task === "trip_plan");
+    if (result.ok && result.value.task === "trip_plan") {
+      assert.equal(result.value.profile.travelers, 12);
+      assert.equal(result.value.flightBooked, true);
+    }
+  });
 });
 
 describe("같은 출처 확인", () => {
@@ -57,6 +67,10 @@ describe("같은 출처 확인", () => {
     assert.equal(checkOrigin(headers({ host: "easy-travel.example" }), false)?.status, 403);
     assert.equal(checkOrigin(headers({ host: "easy-travel.example" }), true), null);
     assert.equal(checkOrigin(headers({ host: "easy-travel.example", "sec-fetch-site": "same-origin" }), false), null);
+  });
+
+  it("허용 목록에 등록한 네이티브 WebView Origin은 통과", () => {
+    assert.equal(checkOrigin(headers({ origin: "capacitor://localhost", host: "easy-travel.example" }), false, ["capacitor://localhost"]), null);
   });
 });
 

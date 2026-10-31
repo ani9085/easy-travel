@@ -21,7 +21,11 @@ import {
 import { Translator } from "../../components/Translator.tsx";
 import { profileForDestination } from "../../lib/destinations.ts";
 import {
+  BUDGET_STYLES,
+  MAX_TRAVELERS,
+  TRAVEL_PREFERENCES,
   addJournalEvent,
+  checkTripDates,
   lastJournalEvent,
   markJournalShared,
   nextItineraryItem,
@@ -29,14 +33,18 @@ import {
   tripTimeline,
   type ItineraryItem,
   type ItineraryStatus,
-  type JournalEvent
+  type JournalEvent,
+  type BudgetStyle,
+  type TravelPreference,
+  type TripProfile
 } from "../../lib/trip.ts";
 
-const VIEWS = ["plan", "translate", "money", "photo", "arrival", "help"] as const;
+const VIEWS = ["plan", "setup", "translate", "money", "photo", "arrival", "help"] as const;
 type View = (typeof VIEWS)[number];
 
 const VIEW_TITLE: Record<View, string> = {
   plan: "오늘 일정",
+  setup: "여행 계획 세우기",
   translate: "통역",
   money: "돈 계산",
   photo: "여기 어디?",
@@ -57,7 +65,7 @@ type Undo = { id: string; status: ItineraryStatus; statusAt: string | null; mess
 
 export default function TravelerPage() {
   const hydrated = useHydrated();
-  const { trip, updateTrip, storageBlocked } = useTrip();
+  const { trip, updateTrip, updateProfile, storageBlocked } = useTrip();
   const [view, go] = useHashView(VIEWS);
   const [undo, setUndo] = useState<Undo | null>(null);
   const [pendingCall, setPendingCall] = useState<CallTarget | null>(null);
@@ -70,6 +78,7 @@ export default function TravelerPage() {
   const profile = trip.profile;
   const destination = profile.destination.trim() || "여행지";
   const place = useMemo(() => profileForDestination(profile.destination), [profile.destination]);
+  const dateCheck = checkTripDates(profile);
   const timeline = hydrated ? tripTimeline(profile, new Date(), place.timeZone) : null;
   const current = nextItineraryItem(trip.itinerary, timeline);
   const todayDay = timeline?.stage === "during" ? timeline.day : current?.day ?? 1;
@@ -78,6 +87,11 @@ export default function TravelerPage() {
   const localCall = localEmergencyCall(profile.emergencyNumber);
   const lastArrival = lastJournalEvent(trip, "hotel_arrival");
   const stage = !timeline ? "" : timeline.stage === "before" ? `출발까지 ${timeline.daysUntil}일` : timeline.stage === "during" ? `여행 ${timeline.day}일째` : timeline.stage === "after" ? "귀국 후" : "날짜 미정";
+
+  function changePlan(patch: Partial<TripProfile>) {
+    const cleared = updateProfile(patch);
+    setNotice(cleared ? "이전 예시 일정은 새 여행에 섞이지 않도록 비웠어요." : "여행 계획을 저장했어요.");
+  }
 
   function open(next: View | "") {
     setNotice("");
@@ -196,6 +210,7 @@ export default function TravelerPage() {
               <button type="button" className="tile" onClick={() => open("money")}><span aria-hidden="true">💱</span>돈 계산</button>
               <button type="button" className="tile" onClick={() => open("photo")}><span aria-hidden="true">📷</span>여기 어디?</button>
               <button type="button" className="tile danger" onClick={() => open("help")}><span aria-hidden="true">🆘</span>도움 · 연락</button>
+              <button type="button" className="tile" onClick={() => open("setup")}><span aria-hidden="true">🗺️</span>여행 계획 세우기</button>
             </nav>
             <button type="button" className="button big secondary wide" onClick={() => open("plan")}>오늘 일정 전체 보기</button>
             {storageBlocked && <div className="notice">이 브라우저에서는 저장이 막혀 있어요. 창을 닫으면 기록이 사라질 수 있어요.</div>}
@@ -220,6 +235,23 @@ export default function TravelerPage() {
               )) : <div className="empty">오늘 일정이 없어요.</div>}
             </div>
             {undo && <div className="notice success" role="status">{undo.message} <button type="button" className="text-button inline" onClick={revert}>되돌리기</button></div>}
+          </section>
+        )}
+
+        {view === "setup" && (
+          <section className="stack">
+            <p className="lead">부모님이 직접 목적지와 원하는 여행 스타일을 정하면 보호자 화면에도 같은 계획이 보여요.</p>
+            <div className="card planning-form-card">
+              <div className="field"><label htmlFor="traveler-destination">어디로 갈까요?</label><input id="traveler-destination" className="input" value={profile.destination} onChange={(e) => changePlan({ destination: e.target.value })} placeholder="예: 오사카, 일본" /></div>
+              <div className="form-row"><div className="field"><label htmlFor="traveler-start-date">출발일</label><input id="traveler-start-date" className="input" type="date" disabled={profile.flexibleDates} value={profile.startDate} onChange={(e) => changePlan({ startDate: e.target.value })} /></div><div className="field"><label htmlFor="traveler-end-date">귀국일</label><input id="traveler-end-date" className="input" type="date" disabled={profile.flexibleDates} min={profile.startDate || undefined} value={profile.endDate} onChange={(e) => changePlan({ endDate: e.target.value })} /></div></div>
+              {!dateCheck.ok && <div className="notice danger-notice" role="alert">{dateCheck.message}</div>}
+              <label className="check-row"><input type="checkbox" checked={profile.flexibleDates} onChange={(e) => changePlan({ flexibleDates: e.target.checked })} /><span>날짜는 아직 정하지 않았어요</span></label>
+              <div className="form-row"><div className="field"><label htmlFor="traveler-travelers">몇 명이 갈까요?</label><input id="traveler-travelers" className="input" type="number" min="1" max={MAX_TRAVELERS} value={profile.travelers} onChange={(e) => changePlan({ travelers: Number(e.target.value) || 1 })} /></div><div className="field"><label htmlFor="traveler-budget">예산 느낌</label><select id="traveler-budget" className="select" value={profile.budget} onChange={(e) => changePlan({ budget: e.target.value as BudgetStyle })}>{BUDGET_STYLES.map((budget) => <option key={budget}>{budget}</option>)}</select></div></div>
+              <div className="field"><label htmlFor="traveler-preference">어떤 여행이 좋아요?</label><select id="traveler-preference" className="select" value={profile.preference} onChange={(e) => changePlan({ preference: e.target.value as TravelPreference })}>{TRAVEL_PREFERENCES.map((preference) => <option key={preference}>{preference}</option>)}</select></div>
+              {notice && <div className="notice success" role="status">{notice}</div>}
+              <p className="small">입력할 때마다 이 기기에 자동 저장돼요. 실제 항공 가격은 보호자 화면에서 공항 코드를 확인한 뒤 조회합니다.</p>
+              <Link className="button secondary" href="/guardian#flights">항공권 조회 화면 열기</Link>
+            </div>
           </section>
         )}
 

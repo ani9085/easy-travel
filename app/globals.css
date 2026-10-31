@@ -77,7 +77,7 @@ h3 { font-size: 15px; margin-bottom: 7px; }
 .status-row span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
 
 .section { margin-top: 26px; scroll-margin-top: 20px; }
-.section-title { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 13px; }
+.section-title { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 13px; }
 .section-title p { color: var(--muted); font-size: 13px; margin: 0; }
 .section-title a { color: var(--blue); font-size: 12px; font-weight: 800; }
 .quick-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
@@ -169,4 +169,183 @@ a.button { display: inline-block; }
   .rate-box .swap { display: none; }
   .sos-row { display: block; }
   .sos-row .button { width: 100%; margin-top: 12px; }
+}
+
+/* ---------------------------------------------------------------------------
+   Readability pass — 부모님 사용을 위한 큰 글자·높은 대비·48px 이상 터치 영역
+   --------------------------------------------------------------------------- */
+:root { --muted: #475569; --line: #cbd5e1; --amber-ink: #7a4d00; }
+body { font-size: 17px; line-height: 1.5; }
+:focus-visible { outline: 3px solid #0b5fd6; outline-offset: 2px; }
+
+.nav a { min-height: 48px; display: flex; align-items: center; font-size: 16px; }
+.brand span { font-size: 13px; color: #c3d6e2; }
+.sidebar-note { font-size: 13px; color: #d3e2ea; }
+.eyebrow { font-size: 13px; color: #0b5fd6; }
+h2 { font-size: 22px; }
+.lede { font-size: 17px; }
+.card { padding: 24px; }
+.card-header p, .section-title p { font-size: 15px; }
+.pill { font-size: 14px; padding: 8px 12px; }
+
+/* 오늘 카드 */
+.hero-card { min-height: 0; background: linear-gradient(135deg, #0f2d45 0%, #0b5563 60%, #1f7a62 100%); }
+.hero-card .eyebrow { color: #b9f7da; font-size: 14px; }
+.hero-title { margin-bottom: 4px; font-size: 18px; color: #d3e8e8; font-weight: 700; }
+.hero-next { font-size: clamp(30px, 5vw, 44px); font-weight: 800; letter-spacing: -0.04em; line-height: 1.15; }
+.hero-note { margin: 8px 0 0; font-size: 17px; color: #e3f2f2; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+.hero-mode { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.hero-mode label { font-size: 15px; font-weight: 800; color: #d3e8e8; }
+.hero-meta { margin-top: 18px; }
+.hero-card .pill { background: rgba(255,255,255,.18); }
+.status-row strong { font-size: 16px; }
+.status-row span { font-size: 15px; }
+.status-icon { width: 44px; height: 44px; font-size: 20px; }
+
+/* 큰 버튼 · 터치 영역 */
+.button { min-height: 48px; padding: 12px 18px; font-size: 16px; }
+.button.big { min-height: 60px; padding: 14px 22px; font-size: 19px; border-radius: 16px; }
+.button.light { background: #fff; color: var(--navy); }
+.button.outline { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.85); }
+.button.danger { background: #b42318; color: #fff; }
+.button.green { background: #16704c; color: #fff; }
+.button.secondary { border: 1px solid var(--line); }
+.button:disabled { opacity: .6; }
+a.button { display: inline-flex; align-items: center; justify-content: center; }
+.input, .textarea, .select { min-height: 48px; padding: 12px 14px; font-size: 16px; border-color: #94a3b8; }
+.field label { font-size: 15px; color: var(--ink); }
+.inline-select { min-height: 48px; font-size: 16px; }
+.icon-button { width: 48px; height: 48px; font-size: 18px; border-radius: 12px; }
+.place-actions { gap: 6px; }
+.swap { width: 48px; height: 48px; font-size: 18px; }
+.check-input { width: 28px; height: 28px; margin-top: 10px; }
+.day-select { font-size: 15px; }
+.phrase { min-height: 48px; padding: 10px 16px; font-size: 16px; }
+.photo-drop input { font-size: 14px; }
+
+/* 빠른 실행 */
+.quick-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.quick-button { min-height: 132px; padding: 18px; border: 2px solid var(--line); }
+.quick-button .emoji { font-size: 32px; margin-bottom: 10px; }
+.quick-button strong { font-size: 19px; }
+.quick-button span { font-size: 15px; color: var(--muted); }
+.quick-button.danger { border-color: #e9a9a3; background: #fff5f4; }
+
+/* 목록·안내문 */
+.place-item { padding: 14px; gap: 12px; }
+.place-num { width: 32px; height: 32px; font-size: 15px; flex: none; }
+.place-item strong { font-size: 17px; }
+.place-item span { font-size: 14px; color: var(--muted); }
+.notice { font-size: 14px; padding: 12px 14px; line-height: 1.6; }
+.call-confirm strong { font-size: 18px; }
+.muted { font-size: 15px; }
+.small { font-size: 13px; color: var(--muted); }
+.empty { font-size: 15px; }
+.source-line { font-size: 13px; }
+.rate-result strong { font-size: 28px; }
+.checkin strong { font-size: 18px; }
+.checkin span { font-size: 14px; }
+.sos-row strong { font-size: 19px; }
+.footer { font-size: 13px; }
+
+/* 어디서든 SOS 화면으로 가는 고정 버튼 (이동만 합니다. 알림을 보내지 않아요) */
+.sos-fab { position: fixed; right: 16px; bottom: 16px; z-index: 20; min-height: 56px; padding: 0 22px; display: inline-flex; align-items: center; border-radius: 99px; background: #b42318; color: #fff; font-size: 18px; font-weight: 800; box-shadow: 0 8px 24px rgba(180,35,24,.4); }
+.sos-fab:hover { filter: brightness(.95); }
+
+@media (max-width: 1120px) { .quick-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 1020px) {
+  .app-shell { grid-template-columns: 1fr; }
+  .nav { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+  .nav a { padding: 10px 8px; text-align: center; }
+  .sidebar { position: sticky; top: 0; height: auto; z-index: 10; padding: 10px 12px; }
+  .brand { padding: 0 4px 8px; }
+  .sidebar-note { display: none; }
+  .section { scroll-margin-top: 130px; }
+  .main { padding: 20px 14px 90px; }
+}
+@media (max-width: 560px) {
+  h1 { font-size: 30px; }
+  .card { padding: 18px; border-radius: 18px; }
+  .hero-actions .button { width: 100%; }
+  .quick-grid { gap: 10px; }
+  .quick-button { min-height: 120px; padding: 14px; }
+  .quick-button strong { font-size: 17px; }
+  .button-row .button { flex: 1 1 auto; }
+  .checkin { flex-wrap: wrap; }
+  .checkin .button { margin-left: 0; width: 100%; }
+  .place-item { flex-wrap: wrap; }
+  .place-actions { margin-left: 44px; }
+  .place-item.candidate { flex-wrap: nowrap; }
+  .sos-fab { right: 12px; bottom: 12px; }
+}
+
+
+/* 리뷰 보정: 앵커 이동 위치·대비·포커스·고정 SOS 버튼 가림 방지 */
+#checkin, #sos, #translate, #currency { scroll-margin-top: 20px; }
+.button { background: #0b5fd6; }
+.button.ghost { color: #0b5fd6; }
+.sidebar :focus-visible, .hero-card :focus-visible { outline-color: #fff; }
+.sos-fab:focus-visible { outline-color: #fff; outline-offset: 3px; box-shadow: 0 0 0 6px #0b5fd6; }
+.main { padding-bottom: 100px; }
+.place-item > div:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .quick-button { transition: none; } }
+@media (max-width: 1020px) {
+  #checkin, #sos, #translate, #currency { scroll-margin-top: 130px; }
+}
+@media (max-width: 1020px) and (max-height: 520px) {
+  .sidebar { position: relative; }
+  .section, #checkin, #sos, #translate, #currency { scroll-margin-top: 20px; }
+}
+@media (max-width: 560px) {
+  .button-row .input { flex: 1 1 100%; }
+  .inline-select { width: 100%; }
+}
+
+/* 여행 전 계획 · 실제 항공권 조회가 아닌 이해하기 쉬운 데모 흐름 */
+.planning-section { scroll-margin-top: 20px; }
+.planning-layout { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr); gap: 18px; align-items: stretch; }
+.planning-form-card, .planning-summary-card { height: 100%; }
+.planning-form-card .card-header, .planning-summary-card .card-header { margin-bottom: 14px; }
+.planning-check { display: flex; align-items: center; gap: 9px; margin: 2px 0 16px; color: var(--ink); font-size: 15px; font-weight: 700; }
+.planning-check input { width: 22px; height: 22px; accent-color: var(--blue); }
+.planning-actions { margin-top: 5px; }
+.planning-actions .button { flex: 1 1 185px; }
+.planning-facts { display: grid; gap: 8px; padding: 14px; border-radius: 15px; background: #f3f7fb; color: var(--ink); font-size: 15px; font-weight: 700; }
+.planning-cost { display: grid; gap: 4px; margin-top: 14px; padding: 18px; border-radius: 16px; background: #e9f8f0; color: var(--mint-ink); }
+.planning-cost span { font-size: 14px; font-weight: 800; }
+.planning-cost strong { font-size: clamp(28px, 4vw, 38px); letter-spacing: -0.05em; }
+.planning-cost small { color: #276b4d; font-size: 13px; }
+.planning-days { display: grid; gap: 9px; margin-top: 14px; }
+.planning-day { display: flex; align-items: flex-start; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.planning-day:last-child { border-bottom: 0; padding-bottom: 0; }
+.planning-day strong { display: block; font-size: 16px; }
+.planning-day span { display: block; margin-top: 3px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.planning-results { margin-top: 18px; }
+.planning-results .card-header { margin-bottom: 12px; }
+.planning-disclaimer { margin: 0 0 14px; }
+.flight-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.flight-card { display: grid; gap: 11px; padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: #fbfdff; }
+.flight-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.flight-card-top strong { font-size: 17px; }
+.flight-status { padding: 5px 8px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+.flight-status.good { background: #d8f8e9; color: var(--mint-ink); }
+.flight-status.steady { background: #eef4f8; color: var(--navy); }
+.flight-status.watch { background: var(--amber); color: var(--amber-ink); }
+.flight-route { min-height: 46px; color: var(--ink); font-size: 16px; font-weight: 800; line-height: 1.45; }
+.flight-meta { display: flex; flex-wrap: wrap; gap: 5px 12px; color: var(--muted); font-size: 13px; }
+.flight-price { color: var(--navy); font-size: 26px; font-weight: 900; letter-spacing: -0.04em; }
+.flight-card .button { width: 100%; }
+
+@media (max-width: 1120px) {
+  .flight-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 1020px) {
+  .planning-section { scroll-margin-top: 130px; }
+  .planning-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .planning-actions .button { flex-basis: 100%; }
+  .flight-card-top { display: grid; }
+  .flight-status { justify-self: start; }
 }
